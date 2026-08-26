@@ -29605,9 +29605,21 @@ af.Folder,
 true,
 af.IconThemed
 )
-ah.Size=UDim2.new(0,22,0,22)
+
+
+ah.Size=UDim2.new(0,28,0,28)
 ah.LayoutOrder=-1
+ah.ClipsDescendants=true
+ah.BackgroundTransparency=1
 ah.Parent=ag.Button.TextButton
+local aq=ah:FindFirstChild"OpenButtonIconCorner"
+if not aq then
+aq=ac("UICorner",{
+Name="OpenButtonIconCorner",
+CornerRadius=UDim.new(1,0),
+})
+aq.Parent=ah
+end
 end
 end
 
@@ -29740,6 +29752,11 @@ an.BackgroundTransparency=1
 an.UIStroke.Transparency=1
 an.TextButton.AutomaticSize="None"
 an.TextButton.Size=UDim2.new(0,36,0,36)
+if ah then
+ah.Size=UDim2.new(0,28,0,28)
+ah.Visible=true
+ah.ClipsDescendants=true
+end
 an.TextButton.BackgroundTransparency=0
 an.TextButton.BackgroundColor3=Color3.new(1,1,1)
 an.TextButton.UICorner.CornerRadius=UDim.new(1,0)
