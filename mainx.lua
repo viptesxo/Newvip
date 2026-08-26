@@ -6349,6 +6349,7 @@ function createMainUI(reuseWindowObj)
         Title = "",
         Icon = PARADOX_LOGO_ASSET,
         OnlyIcon = true,
+        Position = UDim2.new(0, 112, 0.5, -180),
         CornerRadius = UDim.new(1, 0),
         StrokeThickness = 2,
         OnlyMobile = false,
