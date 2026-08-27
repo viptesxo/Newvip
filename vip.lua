@@ -6413,6 +6413,13 @@ pcall(function()
             Callback = function(Value) playClickSound(); uiSettings.showOutsidePlayStop = Value == true; saveUiSettings(true); toggleOutsidePlayStopButton(Value == true) end })
         HomeToggles:Toggle({ Title = "Player speed tags", Icon = "users", Value = _G.BITWISE_PlayerSpeedTag_Active == true,
             Callback = function(Value) playClickSound(); if (Value == true) ~= (_G.BITWISE_PlayerSpeedTag_Active == true) then togglePlayerSpeedTags() end end })
+        if userLevel == "vip" then
+            HomeToggles:Button({ Title = "Set Speed dari Spedometer", Icon = "zap", Desc = "Gunakan kecepatan perangkat saat ini",
+                Callback = function() playClickSound(); setSpeedFromCurrent() end })
+        else
+            HomeToggles:Button({ Title = "Set Speed dari Spedometer (VIP)", Icon = "lock", Desc = "Fitur ini hanya tersedia untuk VIP",
+                Callback = function() playClickSound(); showNotification("VIP Required", "Fitur Set Speed dari Spedometer hanya untuk VIP.", 4) end })
+        end
     end)
 
     -- ========== RECORD VIP DIRECT EXECUTE ==========
@@ -6520,29 +6527,10 @@ end
     })
 end)
 
-    -- TAB 2: SPEED
+    -- TAB 2: MEMORY
+    local MemoryTab
     pcall(function()
-        local SpeedTab = Window:Tab({ Title = "Speed", Icon = "zap" })
-        SpeedTab:Section({ Title = "Spedometer", Icon = "gauge" })
-        SpeedTab:Toggle({
-            Title = "Speedometer",
-            Icon = "gauge",
-            Desc = "Show/hide real-time speed overlay luar UI (draggable)",
-            Value = false,
-            Callback = function(Value)
-                playClickSound()
-                if (Value == true) ~= speedometerActive then
-                    toggleSpeedometer()
-                end
-            end
-        })
-        if userLevel == "vip" then
-            SpeedTab:Button({ Title = "Set Speed from Speedometer (VIP)", Icon = "zap", Desc = "Copy your current in-game speed as playback speed",
-                Callback = function() playClickSound(); setSpeedFromCurrent() end })
-        else
-            SpeedTab:Button({ Title = "Set Speed from Speedometer (VIP Only)", Icon = "lock", Desc = "Upgrade to VIP to use this feature",
-                Callback = function() playClickSound(); showNotification("VIP Required","🔒 This feature is VIP only!\nGet key at discord.gg/fsNpvCCqxq",4) end })
-        end
+        MemoryTab = Window:Tab({ Title = "Memory", Icon = "cpu" })
     end)
 
     -- TAB 3: DATA
@@ -6705,8 +6693,7 @@ end)
     -- TAB 5: VIP (fitur tetap tersedia, tetapi tidak ditampilkan di menu bar utama).
     -- TAB 4: VIP
     pcall(function()
-        local VIPTab = Window:Tab({ Title = "VIP", Icon = "crown" })
-        pcall(function() VIPTab.UIElements.Main.Visible = false end)
+        local VIPTab = MemoryTab
         if userLevel == "vip" then
             VIPTab:Section({ Title = "Path Visualizer", Icon = "route" })
             VIPTab:Toggle({
