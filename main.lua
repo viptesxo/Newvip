@@ -4,7 +4,7 @@
     | |/ |/ / / _ \/ _  / /_/ // /  
     |__/|__/_/_//_/\_,_/\____/___/
     
-    v1.6.66  |  2026-08-26  |  Roblox UI Library for scripts
+    v1.6.66  |  2026-08-27  |  Roblox UI Library for scripts
     
     To view the source code, see the `src/` folder on the official GitHub repository.
     
@@ -29659,6 +29659,7 @@ local ar={
 Title=aq.Title,
 Icon=aq.Icon,
 Placeholder=aq.Placeholder==true,
+RoundIcon=aq.RoundIcon==true,
 Enabled=aq.Enabled,
 Position=aq.Position,
 OnlyIcon=aq.OnlyIcon or false,
@@ -29780,6 +29781,47 @@ ac("UICorner",{CornerRadius=UDim.new(1,0)}),
 })
 end
 at.Visible=true
+end
+
+if ar.RoundIcon then
+if ai then
+ai.Visible=false
+end
+if aj then
+aj.Visible=false
+end
+if ak then
+ak.Visible=false
+end
+if ao then
+ao:Set(false)
+end
+
+local as=an.TextButton:FindFirstChild"IconTitleLayout"
+if as then
+as.Enabled=false
+end
+
+an.AutomaticSize="None"
+an.Size=UDim2.new(0,44,0,44)
+an.TextButton.AutomaticSize="None"
+an.TextButton.Size=UDim2.new(0,36,0,36)
+an.TextButton.BackgroundTransparency=1
+an.TextButton.UIPadding.PaddingLeft=UDim.new(0,0)
+an.TextButton.UIPadding.PaddingRight=UDim.new(0,0)
+an.TextButton.UICorner.CornerRadius=UDim.new(1,0)
+
+if ah then
+ah.Size=UDim2.new(0,30,0,30)
+ah.LayoutOrder=0
+ah.Visible=true
+ah.ClipsDescendants=true
+end
+
+local at=an.TextButton:FindFirstChild"OpenButtonPlaceholder"
+if at then
+at.Visible=false
+end
 end
 
 an.UIStroke.UIGradient.Color=ar.Color

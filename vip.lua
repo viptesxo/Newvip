@@ -6348,8 +6348,9 @@ function createMainUI(reuseWindowObj)
     Window:EditOpenButton({
         Title = "",
         Icon = PARADOX_LOGO_ASSET,
-        OnlyIcon = false,
-        Position = UDim2.new(0, 205, 0.5, -120),
+        OnlyIcon = true,
+        RoundIcon = true,
+        Position = UDim2.new(0, 230, 0.5, -120),
         CornerRadius = UDim.new(1, 0),
         StrokeThickness = 2,
         OnlyMobile = false,
