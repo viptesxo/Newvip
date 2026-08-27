@@ -6186,6 +6186,27 @@ function buildTopbarTitle()
     return string.format("PARADOX HAX [%s]", getTopbarAccessLabel())
 end
 
+function buildTopbarInfo()
+    local accountName = player and (player.DisplayName or player.Name) or "Unknown"
+    local keyText = tostring(validatedKey or "---")
+    if #keyText > 16 then
+        keyText = keyText:sub(1, 16) .. "..."
+    end
+
+    local expiryText = "---"
+    local saved = loadKeyFromLocal()
+    local expiryTimestamp = saved and tonumber(saved.expiryTimestamp)
+    if expiryTimestamp and expiryTimestamp > 0 then
+        expiryText = os.date("%d/%m/%Y %H:%M", expiryTimestamp)
+    elseif tonumber(remainingDays) and tonumber(remainingDays) > 0 then
+        expiryText = "sisa " .. tostring(remainingDays) .. " hari"
+    elseif keyText == "FREE-ACCESS-2026" then
+        expiryText = "akses gratis"
+    end
+
+    return string.format("Akun: %s  |  License: %s  |  Berakhir: %s", accountName, keyText, expiryText)
+end
+
 function destroyTopbarTag(tagObj)
     if tagObj then
         pcall(function()
@@ -6292,6 +6313,9 @@ function startTopbarStatsIndicator()
                 if Window and Window.SetTitle then
                     Window:SetTitle(buildTopbarTitle())
                 end
+                if Window and Window.SetTopbarInfo then
+                    Window:SetTopbarInfo(buildTopbarInfo())
+                end
             end)
 
             refreshTopbarAccessTag(false)
@@ -6316,11 +6340,13 @@ function createMainUI(reuseWindowObj)
         Window = reuseWindowObj
         pcall(function()
             if Window.SetTitle then Window:SetTitle(windowTitle) end
+            if Window.SetTopbarInfo then Window:SetTopbarInfo(buildTopbarInfo()) end
             if Window.SetSize then Window:SetSize(UDim2.fromOffset(700, 520)) end
         end)
     else
         Window, winErr = windUICreateWindowSafe({
             Title   = windowTitle,
+            TopbarInfo = buildTopbarInfo(),
             Icon    = PARADOX_LOGO_ASSET,
             Author  = "PARADOX HAX",
             Folder  = "PARADOX_HAX_Replay",
