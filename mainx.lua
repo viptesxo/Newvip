@@ -6183,7 +6183,7 @@ function readClientPingText()
 end
 
 function buildTopbarTitle()
-    return string.format("PARADOX HAX [%s]", getTopbarAccessLabel())
+    return ""
 end
 
 function buildTopbarInfo()
