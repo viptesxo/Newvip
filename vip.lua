@@ -3919,7 +3919,7 @@ local outsidePlayStopShell = nil
 local outsidePlayStopIcon = nil
 local outsidePlayStopUpdater = nil
 local outsidePlayStopConnections = {}
-local OUTSIDE_PLAYSTOP_IMAGE = "rbxassetid://130280202431400"
+local OUTSIDE_PLAYSTOP_IMAGE = "rbxassetid://131078999101565"
 local OUTSIDE_PLAYSTOP_DRAG_THRESHOLD = 7
 -- PATCH MOBILE 2 JARI: tombol floating tetap bisa digeser di HP,
 -- tapi hanya oleh jari yang MENEKAN tombol. Input analog/joystick dari jari lain diabaikan.
@@ -4011,6 +4011,18 @@ local function createOutsidePlayStopButton()
 
     local playerGui = player:WaitForChild("PlayerGui")
 
+    -- Bersihkan overlay Outside Play/Stop dari eksekusi script lama.
+    -- Instance lama dapat tetap hidup saat script dieksekusi ulang dan meninggalkan garis/frame lebar.
+    for _, child in ipairs(playerGui:GetChildren()) do
+        local childName = string.lower(tostring(child.Name or ""))
+        if child:IsA("ScreenGui")
+        and childName:find("outside", 1, true)
+        and childName:find("play", 1, true)
+        and childName:find("stop", 1, true) then
+            pcall(function() child:Destroy() end)
+        end
+    end
+
     outsidePlayStopGui = Instance.new("ScreenGui")
     outsidePlayStopGui.Name = "BITWISE_Outside_PlayStop"
     outsidePlayStopGui.ResetOnSpawn = false
@@ -4025,6 +4037,7 @@ local function createOutsidePlayStopButton()
     holder.Position = UDim2.new(1, -105, 0.62, 0)
     holder.BackgroundTransparency = 1
     holder.BorderSizePixel = 0
+    holder.ClipsDescendants = true
     holder.ZIndex = 250
     holder.Active = false
     outsidePlayStopHolder = holder
@@ -4035,6 +4048,7 @@ local function createOutsidePlayStopButton()
     shell.Position = UDim2.new(0.5, -28, 0.5, -28)
     shell.BackgroundColor3 = Color3.fromRGB(65, 120, 255)
     shell.BackgroundTransparency = 0.02
+    shell.ClipsDescendants = true
     shell.AutoButtonColor = false
     shell.Image = ""
     shell.ZIndex = 251
@@ -4059,8 +4073,9 @@ local function createOutsidePlayStopButton()
 
     local icon = Instance.new("ImageLabel", shell)
     icon.Name = "Icon"
-    icon.Size = UDim2.new(1, -6, 1, -6)
-    icon.Position = UDim2.new(0, 3, 0, 3)
+    icon.Size = UDim2.fromOffset(50, 50)
+    icon.Position = UDim2.new(0.5, 0, 0.5, 0)
+    icon.AnchorPoint = Vector2.new(0.5, 0.5)
     icon.BackgroundTransparency = 1
     icon.Image = OUTSIDE_PLAYSTOP_IMAGE
     icon.ScaleType = Enum.ScaleType.Fit
@@ -6183,7 +6198,10 @@ function readClientPingText()
 end
 
 function buildTopbarTitle()
-    return string.format("PARADOX HAX [%s]", getTopbarAccessLabel())
+    local state = _G.BITWISE_TOPBAR_STATS or {}
+    local fps = tonumber(state.fps) or 0
+    local ping = tostring(state.ping or "-- ms")
+    return string.format("FPS: %d  |  Ping: %s", fps, ping)
 end
 
 function buildTopbarInfo()
