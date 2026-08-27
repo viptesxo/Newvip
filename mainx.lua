@@ -6183,7 +6183,7 @@ function readClientPingText()
 end
 
 function buildTopbarTitle()
-    return ""
+    return string.format("PARADOX HAX [%s]", getTopbarAccessLabel())
 end
 
 function buildTopbarInfo()
@@ -6199,7 +6199,7 @@ function buildTopbarInfo()
         expiryText = "akses gratis"
     end
 
-    return string.format("Akun: %s  |  Berakhir: %s", accountName, expiryText)
+    return string.format(" ||   Akun: %s  |  Berakhir: %s", accountName, expiryText)
 end
 
 function destroyTopbarTag(tagObj)
