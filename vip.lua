@@ -6183,10 +6183,7 @@ function readClientPingText()
 end
 
 function buildTopbarTitle()
-    local state = _G.BITWISE_TOPBAR_STATS or {}
-    local fps = tonumber(state.fps) or 0
-    local ping = tostring(state.ping or "-- ms")
-    return string.format("FPS: %d  |  Ping: %s", fps, ping)
+    return string.format("PARADOX HAX [%s]", getTopbarAccessLabel())
 end
 
 function buildTopbarInfo()
@@ -6202,7 +6199,7 @@ function buildTopbarInfo()
         expiryText = "akses gratis"
     end
 
-    return string.format(" ||   Akun: %s  |  Berakhir: %s", accountName, expiryText)
+    return string.format("Akun: %s  |  Berakhir: %s", accountName, expiryText)
 end
 
 function destroyTopbarTag(tagObj)
@@ -6346,7 +6343,6 @@ function createMainUI(reuseWindowObj)
             Title   = windowTitle,
             TopbarInfo = buildTopbarInfo(),
             Icon    = PARADOX_LOGO_ASSET,
-            Author  = "PARADOX HAX",
             Folder  = "PARADOX_HAX_Replay",
             Size    = UDim2.fromOffset(700, 540),
             Transparent = false,
@@ -7256,7 +7252,6 @@ function createKeyModal()
     LoginWindow, err = windUICreateWindowSafe({
         Title = "PARADOX HAX Login",
         Icon = PARADOX_LOGO_ASSET,
-        Author = "PARADOX HAX",
         Folder = "PARADOX_HAX_Replay",
         Size = UDim2.fromOffset(700, 540),
         MinSize = Vector2.new(560, 380),
