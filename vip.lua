@@ -4011,6 +4011,18 @@ local function createOutsidePlayStopButton()
 
     local playerGui = player:WaitForChild("PlayerGui")
 
+    -- Bersihkan overlay Outside Play/Stop dari eksekusi script lama.
+    -- Instance lama dapat tetap hidup saat script dieksekusi ulang dan meninggalkan garis/frame lebar.
+    for _, child in ipairs(playerGui:GetChildren()) do
+        local childName = string.lower(tostring(child.Name or ""))
+        if child:IsA("ScreenGui")
+        and childName:find("outside", 1, true)
+        and childName:find("play", 1, true)
+        and childName:find("stop", 1, true) then
+            pcall(function() child:Destroy() end)
+        end
+    end
+
     outsidePlayStopGui = Instance.new("ScreenGui")
     outsidePlayStopGui.Name = "BITWISE_Outside_PlayStop"
     outsidePlayStopGui.ResetOnSpawn = false
