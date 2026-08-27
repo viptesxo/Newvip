@@ -40,7 +40,7 @@ local API_BASE_URL  = "https://vipdashboard-gljqgiat.manus.space" -- Game featur
 local FREE_KEY      = "FREE-ACCESS-2026"
 local SCRIPT_NAME   = "race"
 -- Upload 764572.png ke Roblox lalu ganti nilai ini dengan asset ID-nya.
-local PARADOX_LOGO_ASSET = "rbxassetid://106430785917554"
+local PARADOX_LOGO_ASSET = "rbxassetid://94845415725689"
 
 local KEY_STORAGE_NAME = "PARADOX HAXKeyStorage_V17"
 local KEY_FILE_NAME    = "PARADOX HAX_key.json"
