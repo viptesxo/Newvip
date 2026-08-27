@@ -29517,6 +29517,7 @@ AnchorPoint=Vector2.new(0.5,0.5),
 Parent=af.Parent,
 BackgroundTransparency=1,
 Active=true,
+Name="Draggable Logo",
 Visible=false,
 })
 
@@ -29530,6 +29531,7 @@ Size=UDim2.new(0,0,0,44),
 AutomaticSize="X",
 Parent=al,
 Active=true,
+Name="DraggableLogoButton",
 BackgroundTransparency=.25,
 ZIndex=99,
 BackgroundColor3=Color3.new(0,0,0),
@@ -29559,6 +29561,7 @@ VerticalAlignment="Center",
 
 ac("TextButton",{
 AutomaticSize="XY",
+Name="DraggableLogoTouchArea",
 Active=true,
 BackgroundTransparency=1,
 Size=UDim2.new(0,0,0,36),
@@ -29645,6 +29648,8 @@ end)
 
 
 local ao=ab.Drag(al,{al,an,an.TextButton})
+ag.DraggableLogo=al
+ag.DraggableLogoName="Draggable Logo"
 
 
 function ag.Visible(ap,aq)
@@ -38121,12 +38126,12 @@ Text=z or"",
 FontFace=Font.new(an.Font,Enum.FontWeight.Medium),
 BackgroundTransparency=1,
 TextTransparency=0.45,
-Size=UDim2.new(0,300,0,11),
+Size=UDim2.new(0,440,0,22),
 TextTruncate="AtEnd",
-TextXAlignment="Left",
-TextSize=9,
+TextXAlignment="Center",
+TextSize=13,
 Visible=aw.ShowTitle and z~=nil and z~="",
-LayoutOrder=2,
+LayoutOrder=1,
 ThemeTag={TextColor3="WindowTopbarAuthor"},
 Name="TopbarInfo",
 })
@@ -38148,7 +38153,7 @@ Name="Title",
 TextXAlignment="Left",
 Visible=aw.ShowTitle,
 TextSize=13,
-LayoutOrder=1,
+LayoutOrder=2,
 
 ThemeTag={
 TextColor3="WindowTopbarTitle",
@@ -38240,8 +38245,8 @@ f,
 ao("Frame",{
 AutomaticSize="X",
 Size=aw.TabLayout=="Top"and UDim2.new(0,0,0,30)or UDim2.new(0,0,1,0),
-Position=aw.TabLayout=="Top"and UDim2.new(0,5,0,0)or UDim2.new(0,0,0,0),
-AnchorPoint=Vector2.new(0,0),
+Position=aw.TabLayout=="Top"and UDim2.new(0.5,0,0,0)or UDim2.new(0,0,0,0),
+AnchorPoint=aw.TabLayout=="Top"and Vector2.new(0.5,0)or Vector2.new(0,0),
 BackgroundTransparency=1,
 Name="Left",
 
@@ -38263,7 +38268,7 @@ LayoutOrder=2,
 ao("UIListLayout",{
 Padding=UDim.new(0,0),
 SortOrder="LayoutOrder",
-FillDirection="Horizontal",
+FillDirection="Vertical",
 VerticalAlignment="Center",
 }),
 v,
