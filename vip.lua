@@ -6414,11 +6414,11 @@ pcall(function()
         HomeToggles:Toggle({ Title = "Player speed tags", Icon = "users", Value = _G.BITWISE_PlayerSpeedTag_Active == true,
             Callback = function(Value) playClickSound(); if (Value == true) ~= (_G.BITWISE_PlayerSpeedTag_Active == true) then togglePlayerSpeedTags() end end })
         if userLevel == "vip" then
-            HomeToggles:Button({ Title = "Set Speed dari Spedometer", Icon = "zap", Desc = "Gunakan kecepatan perangkat saat ini",
+            HomeToggles:Button({ Title = "Set Speed dari Spedometer", Icon = "zap", Desc = "Gunakan kecepatan saat ini",
                 Callback = function() playClickSound(); setSpeedFromCurrent() end })
         else
             HomeToggles:Button({ Title = "Set Speed dari Spedometer (VIP)", Icon = "lock", Desc = "Fitur ini hanya tersedia untuk VIP",
-                Callback = function() playClickSound(); showNotification("VIP Required", "Fitur Set Speed dari Spedometer hanya untuk VIP.", 4) end })
+                Callback = function() playClickSound(); showNotification("VIP Required", "Fitur ini hanya untuk VIP.", 4) end })
         end
     end)
 
