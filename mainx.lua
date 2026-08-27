@@ -6183,7 +6183,10 @@ function readClientPingText()
 end
 
 function buildTopbarTitle()
-    return string.format("PARADOX HAX [%s]", getTopbarAccessLabel())
+    local state = _G.BITWISE_TOPBAR_STATS or {}
+    local fps = tonumber(state.fps) or 0
+    local ping = tostring(state.ping or "-- ms")
+    return string.format("FPS: %d  |  Ping: %s", fps, ping)
 end
 
 function buildTopbarInfo()
@@ -6199,7 +6202,7 @@ function buildTopbarInfo()
         expiryText = "akses gratis"
     end
 
-    return string.format("Akun: %s  |  Berakhir: %s", accountName, expiryText)
+    return string.format(" ||   Akun: %s  |  Berakhir: %s", accountName, expiryText)
 end
 
 function destroyTopbarTag(tagObj)
