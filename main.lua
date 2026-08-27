@@ -29607,8 +29607,8 @@ af.IconThemed
 )
 
 
-ah.Size=UDim2.new(0,28,0,28)
-ah.LayoutOrder=-1
+ah.Size=UDim2.new(0,36,0,36)
+ah.LayoutOrder=1
 ah.ClipsDescendants=true
 ah.BackgroundTransparency=1
 ah.Parent=ag.Button.TextButton
@@ -29715,8 +29715,8 @@ if ai then
 if ar.Title then
 ai.Text=ar.Title
 ab:ChangeTranslationKey(ai,ar.Title)
-elseif ar.Title==nil then
-
+elseif ar.Title==nil or ar.Title==""then
+ai.Visible=false
 end
 end
 
@@ -29753,7 +29753,8 @@ an.UIStroke.Transparency=1
 an.TextButton.AutomaticSize="None"
 an.TextButton.Size=UDim2.new(0,36,0,36)
 if ah then
-ah.Size=UDim2.new(0,28,0,28)
+ah.Size=UDim2.new(0,36,0,36)
+ah.LayoutOrder=1
 ah.Visible=true
 ah.ClipsDescendants=true
 end
