@@ -3919,7 +3919,7 @@ local outsidePlayStopShell = nil
 local outsidePlayStopIcon = nil
 local outsidePlayStopUpdater = nil
 local outsidePlayStopConnections = {}
-local OUTSIDE_PLAYSTOP_IMAGE = "rbxassetid://131078999101565"
+local OUTSIDE_PLAYSTOP_IMAGE = "rbxassetid://130280202431400"
 local OUTSIDE_PLAYSTOP_DRAG_THRESHOLD = 7
 -- PATCH MOBILE 2 JARI: tombol floating tetap bisa digeser di HP,
 -- tapi hanya oleh jari yang MENEKAN tombol. Input analog/joystick dari jari lain diabaikan.

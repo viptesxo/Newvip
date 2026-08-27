@@ -29517,7 +29517,6 @@ AnchorPoint=Vector2.new(0.5,0.5),
 Parent=af.Parent,
 BackgroundTransparency=1,
 Active=true,
-Name="Draggable Logo",
 Visible=false,
 })
 
@@ -29531,7 +29530,6 @@ Size=UDim2.new(0,0,0,44),
 AutomaticSize="X",
 Parent=al,
 Active=true,
-Name="DraggableLogoButton",
 BackgroundTransparency=.25,
 ZIndex=99,
 BackgroundColor3=Color3.new(0,0,0),
@@ -29561,7 +29559,6 @@ VerticalAlignment="Center",
 
 ac("TextButton",{
 AutomaticSize="XY",
-Name="DraggableLogoTouchArea",
 Active=true,
 BackgroundTransparency=1,
 Size=UDim2.new(0,0,0,36),
@@ -29648,8 +29645,6 @@ end)
 
 
 local ao=ab.Drag(al,{al,an,an.TextButton})
-ag.DraggableLogo=al
-ag.DraggableLogoName="Draggable Logo"
 
 
 function ag.Visible(ap,aq)
