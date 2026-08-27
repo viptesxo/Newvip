@@ -6188,11 +6188,6 @@ end
 
 function buildTopbarInfo()
     local accountName = player and (player.DisplayName or player.Name) or "Unknown"
-    local keyText = tostring(validatedKey or "---")
-    if #keyText > 16 then
-        keyText = keyText:sub(1, 16) .. "..."
-    end
-
     local expiryText = "---"
     local saved = loadKeyFromLocal()
     local expiryTimestamp = saved and tonumber(saved.expiryTimestamp)
@@ -6200,11 +6195,11 @@ function buildTopbarInfo()
         expiryText = os.date("%d/%m/%Y %H:%M", expiryTimestamp)
     elseif tonumber(remainingDays) and tonumber(remainingDays) > 0 then
         expiryText = "sisa " .. tostring(remainingDays) .. " hari"
-    elseif keyText == "FREE-ACCESS-2026" then
+    elseif validatedKey == "FREE-ACCESS-2026" then
         expiryText = "akses gratis"
     end
 
-    return string.format("Akun: %s  |  License: %s  |  Berakhir: %s", accountName, keyText, expiryText)
+    return string.format("Akun: %s  |  Berakhir: %s", accountName, expiryText)
 end
 
 function destroyTopbarTag(tagObj)
