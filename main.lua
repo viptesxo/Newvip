@@ -29517,6 +29517,7 @@ AnchorPoint=Vector2.new(0.5,0.5),
 Parent=af.Parent,
 BackgroundTransparency=1,
 Active=true,
+Name="Draggable Logo",
 Visible=false,
 })
 
@@ -29530,6 +29531,7 @@ Size=UDim2.new(0,0,0,44),
 AutomaticSize="X",
 Parent=al,
 Active=true,
+Name="DraggableLogoButton",
 BackgroundTransparency=.25,
 ZIndex=99,
 BackgroundColor3=Color3.new(0,0,0),
@@ -29559,6 +29561,7 @@ VerticalAlignment="Center",
 
 ac("TextButton",{
 AutomaticSize="XY",
+Name="DraggableLogoTouchArea",
 Active=true,
 BackgroundTransparency=1,
 Size=UDim2.new(0,0,0,36),
@@ -29645,6 +29648,8 @@ end)
 
 
 local ao=ab.Drag(al,{al,an,an.TextButton})
+ag.DraggableLogo=al
+ag.DraggableLogoName="Draggable Logo"
 
 
 function ag.Visible(ap,aq)
@@ -36087,7 +36092,7 @@ ar.UIElements.Main=ak.NewRoundFrame(ar.UICorner,"Squircle",{
 BackgroundTransparency=1,
 
 
-Size=Window.TabLayout=="Top"and UDim2.new(0.2,-2,1,0)or UDim2.new(1,-4,0,0),
+Size=Window.TabLayout=="Top"and UDim2.new(0.16666666666666666,-2,1,0)or UDim2.new(1,-4,0,0),
 AutomaticSize=Window.TabLayout=="Top"and"None"or"Y",
 
 Parent=ap.Parent,
@@ -38120,13 +38125,13 @@ return ao("TextLabel",{
 Text=z or"",
 FontFace=Font.new(an.Font,Enum.FontWeight.Medium),
 BackgroundTransparency=1,
-TextTransparency=0.45,
-Size=UDim2.new(0,300,0,11),
+TextTransparency=0.2,
+Size=UDim2.new(1,-20,0,28),
 TextTruncate="AtEnd",
-TextXAlignment="Left",
-TextSize=9,
+TextXAlignment="Center",
+TextSize=16,
 Visible=aw.ShowTitle and z~=nil and z~="",
-LayoutOrder=2,
+LayoutOrder=1,
 ThemeTag={TextColor3="WindowTopbarAuthor"},
 Name="TopbarInfo",
 })
@@ -38148,7 +38153,7 @@ Name="Title",
 TextXAlignment="Left",
 Visible=aw.ShowTitle,
 TextSize=13,
-LayoutOrder=1,
+LayoutOrder=2,
 
 ThemeTag={
 TextColor3="WindowTopbarTitle",
@@ -38240,8 +38245,8 @@ f,
 ao("Frame",{
 AutomaticSize="X",
 Size=aw.TabLayout=="Top"and UDim2.new(0,0,0,30)or UDim2.new(0,0,1,0),
-Position=aw.TabLayout=="Top"and UDim2.new(0,5,0,0)or UDim2.new(0,0,0,0),
-AnchorPoint=Vector2.new(0,0),
+Position=aw.TabLayout=="Top"and UDim2.new(0.5,0,0,0)or UDim2.new(0,0,0,0),
+AnchorPoint=aw.TabLayout=="Top"and Vector2.new(0.5,0)or Vector2.new(0,0),
 BackgroundTransparency=1,
 Name="Left",
 
@@ -38254,16 +38259,17 @@ FillDirection="Horizontal",
 VerticalAlignment="Center",
 }),
 ao("Frame",{
-AutomaticSize="XY",
+AutomaticSize="None",
 BackgroundTransparency=1,
 Name="Title",
-Size=UDim2.new(0,0,1,0),
+Size=UDim2.new(1,-8,1,0),
 LayoutOrder=2,
 },{
 ao("UIListLayout",{
 Padding=UDim.new(0,0),
 SortOrder="LayoutOrder",
-FillDirection="Horizontal",
+FillDirection="Vertical",
+HorizontalAlignment="Center",
 VerticalAlignment="Center",
 }),
 v,
@@ -38774,34 +38780,6 @@ SetSize()
 end
 end)
 
-aw:CreateTopbarButton("Close","x",function()
-
-if aw.Close then
-aw:Close()
-end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-end,(aw.Topbar.ButtonsType=="Default"and 999 or 1000),nil,Color3.fromHex"#F15B5B")
 
 function aw.OnOpen(G,H)
 aw.OnOpenCallback=H
