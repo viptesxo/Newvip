@@ -6413,7 +6413,7 @@ pcall(function()
             Callback = function(Value) playClickSound(); uiSettings.showOutsidePlayStop = Value == true; saveUiSettings(true); toggleOutsidePlayStopButton(Value == true) end })
         HomeToggles:Toggle({ Title = "Player speed tags", Icon = "users", Value = _G.BITWISE_PlayerSpeedTag_Active == true,
             Callback = function(Value) playClickSound(); if (Value == true) ~= (_G.BITWISE_PlayerSpeedTag_Active == true) then togglePlayerSpeedTags() end end })
-            SpeedTab:Section({ Title = "Spedometer", Icon = "gauge" })
+            
         HomeToggles:Toggle({
             Title = "Speedometer",
             Icon = "gauge",
