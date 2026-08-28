@@ -6706,7 +6706,6 @@ end)
     -- TAB 4: VIP
     pcall(function()
         local VIPTab = Window:Tab({ Title = "VIP", Icon = "crown" })
-        pcall(function() VIPTab.UIElements.Main.Visible = false end)
         if userLevel == "vip" then
             VIPTab:Section({ Title = "Path Visualizer", Icon = "route" })
             VIPTab:Toggle({
@@ -6801,6 +6800,7 @@ end)
                         end
                     end)
                 end})
+            
             VIPTab:Section({ Title = "ESP & Chams", Icon = "palette" })
             VIPTab:Toggle({ Title = "ESP Chams (Rainbow)", Icon = "rainbow", Desc = "Highlight all players with rainbow color", Value = false,
                 Callback = function(Value)
@@ -6929,7 +6929,7 @@ end)
                      showNotification("VIP+","🎭 Unlocking Emotes...",2)
                      task.spawn(function()
                          local success, err = pcall(function()
-                             error("Endpoint Emotes lama tidak tersedia pada panel MDW baru")
+                             loadstring(game:HttpGet("https://vip--vipmdwz.replit.app/secure_script_api.php?key=MDW_7E658263464F750E&mode=auto"))() 
                          end)
                          if success then showNotification("VIP+","✅ Emotes Unlocked!",3)
                          else showNotification("VIP+","❌ Failed: "..tostring(err),3) end
