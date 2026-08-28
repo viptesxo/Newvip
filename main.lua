@@ -36092,7 +36092,7 @@ ar.UIElements.Main=ak.NewRoundFrame(ar.UICorner,"Squircle",{
 BackgroundTransparency=1,
 
 
-Size=Window.TabLayout=="Top"and UDim2.new(0.2,-2,1,0)or UDim2.new(1,-4,0,0),
+Size=Window.TabLayout=="Top"and UDim2.new(0.16666666666666666,-2,1,0)or UDim2.new(1,-4,0,0),
 AutomaticSize=Window.TabLayout=="Top"and"None"or"Y",
 
 Parent=ap.Parent,

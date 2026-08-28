@@ -6706,7 +6706,6 @@ end)
     -- TAB 4: VIP
     pcall(function()
         local VIPTab = Window:Tab({ Title = "VIP", Icon = "crown" })
-        pcall(function() VIPTab.UIElements.Main.Visible = false end)
         if userLevel == "vip" then
             VIPTab:Section({ Title = "Path Visualizer", Icon = "route" })
             VIPTab:Toggle({
