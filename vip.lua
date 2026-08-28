@@ -6522,191 +6522,8 @@ end)
 
     -- TAB 2: SPEED
     pcall(function()
-        local SpeedTab = Window:Tab({ Title = "Speed", Icon = "zap" })
-        SpeedTab:Section({ Title = "Spedometer", Icon = "gauge" })
-        SpeedTab:Toggle({
-            Title = "Speedometer",
-            Icon = "gauge",
-            Desc = "Show/hide real-time speed overlay luar UI (draggable)",
-            Value = false,
-            Callback = function(Value)
-                playClickSound()
-                if (Value == true) ~= speedometerActive then
-                    toggleSpeedometer()
-                end
-            end
-        })
-        if userLevel == "vip" then
-            SpeedTab:Button({ Title = "Set Speed from Speedometer (VIP)", Icon = "zap", Desc = "Copy your current in-game speed as playback speed",
-                Callback = function() playClickSound(); setSpeedFromCurrent() end })
-        else
-            SpeedTab:Button({ Title = "Set Speed from Speedometer (VIP Only)", Icon = "lock", Desc = "Upgrade to VIP to use this feature",
-                Callback = function() playClickSound(); showNotification("VIP Required","🔒 This feature is VIP only!\nGet key at discord.gg/fsNpvCCqxq",4) end })
-        end
-    end)
-
-    -- TAB 3: DATA
-pcall(function()
-    local DataTab = Window:Tab({ Title = "Load", Icon = "database" })
-
-    -- === HAPUS SAVE RECORDING ===
-    -- DataTab:Button({ Title = "💾 Save Recording", Desc = "Export recorded frames to clipboard as JSON",
-    --     Callback = function() saveRecording() end })
-
-    DataTab:Section({ Title = "Gunung Presets", Icon = "mountain" })
-    if userLevel == "vip" then
-        fetchGunungListAZ(true)
-        local initialGunungValues = buildGunungDropdownValues("")
-
-        DataTab:Input({
-            Title = "Cari Gunung",
-            Icon = "search",
-            Desc = "Ketik nama gunung, lalu pilih dari dropdown. Saat dipilih langsung load otomatis.",
-            Placeholder = "contoh: rinjani / merbabu / lawu",
-            Callback = function(Text)
-                _G.BITWISE_GUNUNG_SEARCH_TEXT = tostring(Text or "")
-                _G.BITWISE_GUNUNG_SELECTED_LABEL = nil
-                refreshGunungDropdown(_G.BITWISE_GUNUNG_SEARCH_TEXT, true)
-            end
-        })
-
-        _G.BITWISE_GUNUNG_SELECTED_LABEL = nil
-        _G.BITWISE_GUNUNG_DROPDOWN_READY = false
-
-        _G.BITWISE_GUNUNG_DROPDOWN_OBJECT = DataTab:Dropdown({
-            Title = "Pilih Gunung",
-            Icon = "mountain",
-            Values = initialGunungValues,
-            Value = "Pilih Gunung",
-            Callback = function(Value)
-                playClickSound()
-                -- Setelah user klik/pilih dari dropdown, langsung load otomatis.
-                -- Guard ini mencegah auto-load saat UI baru dibuat atau list sedang di-refresh/search.
-                if not _G.BITWISE_GUNUNG_DROPDOWN_READY or _G.BITWISE_GUNUNG_IS_REFRESHING then
-                    selectGunungOnly(Value)
-                    return
-                end
-
-                selectGunungOnly(Value)
-                loadSelectedGunung(Value)
-            end
-        })
-
-        task.defer(function()
-            _G.BITWISE_GUNUNG_DROPDOWN_READY = true
-        end)
-
-        DataTab:Button({
-            Title = "Refresh List A-Z",
-            Icon = "refresh-cw",
-            Desc = "Ambil ulang data API dan urutkan sesuai huruf",
-            Callback = function()
-                playClickSound()
-                fetchGunungListAZ(false, true)
-                _G.BITWISE_GUNUNG_DROPDOWN_READY = false
-                refreshGunungDropdown(_G.BITWISE_GUNUNG_SEARCH_TEXT or "", false)
-                _G.BITWISE_GUNUNG_SELECTED_LABEL = nil
-                task.defer(function()
-                    _G.BITWISE_GUNUNG_DROPDOWN_READY = true
-                end)
-            end
-        })
-
-        DataTab:Button({
-            Title = "Hapus Hasil Load",
-            Icon = "trash-2",
-            Desc = "Kosongkan route yang sudah di-load agar status kembali EMPTY.",
-            Callback = function() playClickSound(); clearLoadedRouteResult() end,
-        })
-
-
-        DataTab:Section({ Title = "Private Gunung", Icon = "lock-keyhole" })
-        DataTab:Paragraph({
-            Title = "Gunung Pribadi VIP",
-            Image = "lock-keyhole",
-            ImageSize = 20,
-            Desc = "List ini hanya membaca route yang diupload lewat web VIP Private Gunung memakai key VIP yang sedang login. User lain tidak akan melihat data private ini."
-        })
-
-        fetchPrivateGunungList(true)
-        local initialPrivateGunungValues = buildPrivateGunungDropdownValues("")
-
-        DataTab:Input({
-            Title = "Cari Private Gunung",
-            Icon = "search",
-            Desc = "Cari route pribadi milik key VIP ini.",
-            Placeholder = "contoh: noxera private / latihan",
-            Callback = function(Text)
-                _G.BITWISE_PRIVATE_GUNUNG_SEARCH_TEXT = tostring(Text or "")
-                refreshPrivateGunungDropdown(_G.BITWISE_PRIVATE_GUNUNG_SEARCH_TEXT, true)
-            end
-        })
-
-        _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY = false
-        _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_OBJECT = DataTab:Dropdown({
-            Title = "Pilih Private Gunung",
-            Icon = "lock-keyhole",
-            Values = initialPrivateGunungValues,
-            Value = "Pilih Private Gunung",
-            Callback = function(Value)
-                playClickSound()
-                if not _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY or _G.BITWISE_PRIVATE_GUNUNG_IS_REFRESHING then
-                    selectPrivateGunungOnly(Value)
-                    return
-                end
-                selectPrivateGunungOnly(Value)
-                loadSelectedPrivateGunung(Value)
-            end
-        })
-
-        task.defer(function()
-            _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY = true
-        end)
-
-        DataTab:Button({
-            Title = "Refresh Private Gunung",
-            Icon = "refresh-cw",
-            Desc = "Ambil ulang route pribadi dari key VIP yang sedang login",
-            Callback = function()
-                playClickSound()
-                fetchPrivateGunungList(false, true)
-                _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY = false
-                refreshPrivateGunungDropdown(_G.BITWISE_PRIVATE_GUNUNG_SEARCH_TEXT or "", false)
-                task.defer(function()
-                    _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY = true
-                end)
-            end
-        })
-    else
-        DataTab:Button({ Title = "Load Gunung (VIP Only)", Icon = "lock", Desc = "Upgrade to VIP to access gunung route presets",
-            Callback = function() playClickSound(); showNotification("VIP Required","🔒 Load Gunung is VIP only!\nGet key at discord.gg/fsNpvCCqxq",4) end })
-    end
-end)
-
-    -- TAB 4: INFO — urutan mengikuti Menu.h: Home, Speed, Load, Info, Setting.
-    pcall(function()
-        local InfoTopTab = Window:Tab({ Title = "Info", Icon = "info" })
-        InfoTopTab:Section({ Title = "PARADOX HAX", Icon = "info" })
-        InfoTopTab:Paragraph({
-            Title = "System Status",
-            Image = "activity",
-            ImageSize = 18,
-            Desc = "Playback UI aktif\nStatus akun: " .. tostring(userLevel or "FREE"):upper() .. "\nWindUI Paradox layout"
-        })
-        InfoTopTab:Section({ Title = "Quick Info", Icon = "list" })
-        InfoTopTab:Paragraph({
-            Title = "Features",
-            Image = "sparkles",
-            ImageSize = 18,
-            Desc = "Record / Load Replay\nSpeed control\nVIP tools dan settings tersedia dari panel"
-        })
-    end)
-
-    -- TAB 5: VIP (fitur tetap tersedia, tetapi tidak ditampilkan di menu bar utama).
-    -- TAB 4: VIP
-    pcall(function()
         local VIPTab = Window:Tab({ Title = "VIP", Icon = "crown" })
-        pcall(function() VIPTab.UIElements.Main.Visible = false end)
+        
         if userLevel == "vip" then
             VIPTab:Section({ Title = "Path Visualizer", Icon = "route" })
             VIPTab:Toggle({
@@ -6956,9 +6773,187 @@ end)
                     pcall(function() clipboard.set("https://discord.gg/fsNpvCCqxq") end)
                     showNotification("VIP Store","Discord link copied!\ndiscord.gg/fsNpvCCqxq",4)
                 end})
+        VIPTab:Section({ Title = "Spedometer", Icon = "gauge" })
+        VIPTab:Toggle({
+            Title = "Speedometer",
+            Icon = "gauge",
+            Desc = "Show/hide real-time speed overlay luar UI (draggable)",
+            Value = false,
+            Callback = function(Value)
+                playClickSound()
+                if (Value == true) ~= speedometerActive then
+                    toggleSpeedometer()
+                end
+            end
+        })
+        if userLevel == "vip" then
+            VIPTab:Button({ Title = "Set Speed from Speedometer (VIP)", Icon = "zap", Desc = "Copy your current in-game speed as playback speed",
+                Callback = function() playClickSound(); setSpeedFromCurrent() end })
+        else
+            VIPTab:Button({ Title = "Set Speed from Speedometer (VIP Only)", Icon = "lock", Desc = "Upgrade to VIP to use this feature",
+                Callback = function() playClickSound(); showNotification("VIP Required","🔒 This feature is VIP only!\nGet key at discord.gg/fsNpvCCqxq",4) end })
         end
     end)
 
+    -- TAB 3: DATA
+pcall(function()
+    local DataTab = Window:Tab({ Title = "Load", Icon = "database" })
+
+    -- === HAPUS SAVE RECORDING ===
+    -- DataTab:Button({ Title = "💾 Save Recording", Desc = "Export recorded frames to clipboard as JSON",
+    --     Callback = function() saveRecording() end })
+
+    DataTab:Section({ Title = "Gunung Presets", Icon = "mountain" })
+    if userLevel == "vip" then
+        fetchGunungListAZ(true)
+        local initialGunungValues = buildGunungDropdownValues("")
+
+        DataTab:Input({
+            Title = "Cari Gunung",
+            Icon = "search",
+            Desc = "Ketik nama gunung, lalu pilih dari dropdown. Saat dipilih langsung load otomatis.",
+            Placeholder = "contoh: rinjani / merbabu / lawu",
+            Callback = function(Text)
+                _G.BITWISE_GUNUNG_SEARCH_TEXT = tostring(Text or "")
+                _G.BITWISE_GUNUNG_SELECTED_LABEL = nil
+                refreshGunungDropdown(_G.BITWISE_GUNUNG_SEARCH_TEXT, true)
+            end
+        })
+
+        _G.BITWISE_GUNUNG_SELECTED_LABEL = nil
+        _G.BITWISE_GUNUNG_DROPDOWN_READY = false
+
+        _G.BITWISE_GUNUNG_DROPDOWN_OBJECT = DataTab:Dropdown({
+            Title = "Pilih Gunung",
+            Icon = "mountain",
+            Values = initialGunungValues,
+            Value = "Pilih Gunung",
+            Callback = function(Value)
+                playClickSound()
+                -- Setelah user klik/pilih dari dropdown, langsung load otomatis.
+                -- Guard ini mencegah auto-load saat UI baru dibuat atau list sedang di-refresh/search.
+                if not _G.BITWISE_GUNUNG_DROPDOWN_READY or _G.BITWISE_GUNUNG_IS_REFRESHING then
+                    selectGunungOnly(Value)
+                    return
+                end
+
+                selectGunungOnly(Value)
+                loadSelectedGunung(Value)
+            end
+        })
+
+        task.defer(function()
+            _G.BITWISE_GUNUNG_DROPDOWN_READY = true
+        end)
+
+        DataTab:Button({
+            Title = "Refresh List A-Z",
+            Icon = "refresh-cw",
+            Desc = "Ambil ulang data API dan urutkan sesuai huruf",
+            Callback = function()
+                playClickSound()
+                fetchGunungListAZ(false, true)
+                _G.BITWISE_GUNUNG_DROPDOWN_READY = false
+                refreshGunungDropdown(_G.BITWISE_GUNUNG_SEARCH_TEXT or "", false)
+                _G.BITWISE_GUNUNG_SELECTED_LABEL = nil
+                task.defer(function()
+                    _G.BITWISE_GUNUNG_DROPDOWN_READY = true
+                end)
+            end
+        })
+
+        DataTab:Button({
+            Title = "Hapus Hasil Load",
+            Icon = "trash-2",
+            Desc = "Kosongkan route yang sudah di-load agar status kembali EMPTY.",
+            Callback = function() playClickSound(); clearLoadedRouteResult() end,
+        })
+
+
+        DataTab:Section({ Title = "Private Gunung", Icon = "lock-keyhole" })
+        DataTab:Paragraph({
+            Title = "Gunung Pribadi VIP",
+            Image = "lock-keyhole",
+            ImageSize = 20,
+            Desc = "List ini hanya membaca route yang diupload lewat web VIP Private Gunung memakai key VIP yang sedang login. User lain tidak akan melihat data private ini."
+        })
+
+        fetchPrivateGunungList(true)
+        local initialPrivateGunungValues = buildPrivateGunungDropdownValues("")
+
+        DataTab:Input({
+            Title = "Cari Private Gunung",
+            Icon = "search",
+            Desc = "Cari route pribadi milik key VIP ini.",
+            Placeholder = "contoh: noxera private / latihan",
+            Callback = function(Text)
+                _G.BITWISE_PRIVATE_GUNUNG_SEARCH_TEXT = tostring(Text or "")
+                refreshPrivateGunungDropdown(_G.BITWISE_PRIVATE_GUNUNG_SEARCH_TEXT, true)
+            end
+        })
+
+        _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY = false
+        _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_OBJECT = DataTab:Dropdown({
+            Title = "Pilih Private Gunung",
+            Icon = "lock-keyhole",
+            Values = initialPrivateGunungValues,
+            Value = "Pilih Private Gunung",
+            Callback = function(Value)
+                playClickSound()
+                if not _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY or _G.BITWISE_PRIVATE_GUNUNG_IS_REFRESHING then
+                    selectPrivateGunungOnly(Value)
+                    return
+                end
+                selectPrivateGunungOnly(Value)
+                loadSelectedPrivateGunung(Value)
+            end
+        })
+
+        task.defer(function()
+            _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY = true
+        end)
+
+        DataTab:Button({
+            Title = "Refresh Private Gunung",
+            Icon = "refresh-cw",
+            Desc = "Ambil ulang route pribadi dari key VIP yang sedang login",
+            Callback = function()
+                playClickSound()
+                fetchPrivateGunungList(false, true)
+                _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY = false
+                refreshPrivateGunungDropdown(_G.BITWISE_PRIVATE_GUNUNG_SEARCH_TEXT or "", false)
+                task.defer(function()
+                    _G.BITWISE_PRIVATE_GUNUNG_DROPDOWN_READY = true
+                end)
+            end
+        })
+    else
+        DataTab:Button({ Title = "Load Gunung (VIP Only)", Icon = "lock", Desc = "Upgrade to VIP to access gunung route presets",
+            Callback = function() playClickSound(); showNotification("VIP Required","🔒 Load Gunung is VIP only!\nGet key at discord.gg/fsNpvCCqxq",4) end })
+    end
+end)
+
+    -- TAB 4: INFO — urutan mengikuti Menu.h: Home, Speed, Load, Info, Setting.
+    pcall(function()
+        local InfoTopTab = Window:Tab({ Title = "Info", Icon = "info" })
+        InfoTopTab:Section({ Title = "PARADOX HAX", Icon = "info" })
+        InfoTopTab:Paragraph({
+            Title = "System Status",
+            Image = "activity",
+            ImageSize = 18,
+            Desc = "Playback UI aktif\nStatus akun: " .. tostring(userLevel or "FREE"):upper() .. "\nWindUI Paradox layout"
+        })
+        InfoTopTab:Section({ Title = "Quick Info", Icon = "list" })
+        InfoTopTab:Paragraph({
+            Title = "Features",
+            Image = "sparkles",
+            ImageSize = 18,
+            Desc = "Record / Load Replay\nSpeed control\nVIP tools dan settings tersedia dari panel"
+        })
+    end)
+
+    -- TAB 5: VIP (fitur tetap tersedia, tetapi tidak ditampilkan di menu bar utama).
+    -- TAB 4: VIP
     -- TAB 5: SETTINGS
     pcall(function()
         local SettingsTab = Window:Tab({ Title = "Setting", Icon = "settings" })
