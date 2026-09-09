@@ -756,6 +756,77 @@ local function simpleHttpPost(url, data)
     return nil
 end
 
+-- ========== ONLINE CHAT ==========
+local CHAT_API_URL = API_BASE_URL .. "/chat_api.php"
+local chatMessages = {}
+local chatLastRefresh = 0
+local chatDraft = ""
+local chatMessageParagraph = nil
+
+local function chatAuthorName()
+    return player and (player.DisplayName or player.Name) or "Roblox User"
+end
+
+local function chatRenderMessages()
+    if not chatMessageParagraph or not chatMessageParagraph.SetDesc then return end
+    if #chatMessages == 0 then
+        chatMessageParagraph:SetDesc("Belum ada pesan. Tekan Refresh untuk memuat chat.")
+        return
+    end
+    local lines = {}
+    local startIndex = math.max(1, #chatMessages - 19)
+    for i = startIndex, #chatMessages do
+        local m = chatMessages[i]
+        local author = tostring(m.author or m.username or "User")
+        local text = tostring(m.message or "")
+        local created = tostring(m.createdAt or ""):gsub("T", " "):gsub("Z", "")
+        if #created > 16 then created = created:sub(1, 16) end
+        lines[#lines + 1] = string.format("[%s] %s: %s", created, author, text)
+    end
+    chatMessageParagraph:SetDesc(table.concat(lines, "\n"))
+end
+
+local function chatRefresh(silent)
+    if not validatedKey or validatedKey == "" then
+        if not silent then showNotification("Chat", "Login/license belum aktif.", 3) end
+        return false
+    end
+    local url = CHAT_API_URL .. "?key=" .. bitwiseUrlEncode(validatedKey) .. "&deviceId=" .. bitwiseUrlEncode(deviceId or getDeviceId())
+    local response = simpleHttpGet(url, 1, 0)
+    if not response then
+        if not silent then showNotification("Chat", "Gagal mengambil pesan chat.", 4) end
+        return false
+    end
+    local ok, data = pcall(function() return HttpService:JSONDecode(response) end)
+    if not ok or type(data) ~= "table" or data.success == false then
+        if not silent then showNotification("Chat", "Respons chat tidak valid.", 4) end
+        return false
+    end
+    chatMessages = type(data.messages) == "table" and data.messages or {}
+    chatLastRefresh = os.clock()
+    chatRenderMessages()
+    if not silent then showNotification("Chat", "Pesan diperbarui.", 2) end
+    return true
+end
+
+local function chatSend()
+    local text = tostring(chatDraft or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    if text == "" then showNotification("Chat", "Pesan tidak boleh kosong.", 3); return end
+    if #text > 500 then text = text:sub(1, 500) end
+    if not validatedKey or validatedKey == "" then showNotification("Chat", "Login/license belum aktif.", 3); return end
+    local body = HttpService:JSONEncode({ key = validatedKey, deviceId = deviceId or getDeviceId(), author = chatAuthorName(), message = text })
+    local response = simpleHttpPost(CHAT_API_URL, body)
+    if not response then showNotification("Chat", "Gagal mengirim pesan.", 4); return end
+    local ok, data = pcall(function() return HttpService:JSONDecode(response) end)
+    if not ok or (type(data) == "table" and data.success == false) then
+        showNotification("Chat", "Pesan ditolak atau cooldown aktif.", 4)
+        return
+    end
+    chatDraft = ""
+    chatRefresh(true)
+    showNotification("Chat", "Pesan terkirim.", 2)
+end
+
 -- ========== DEVICE / USER TRACKING ==========
 local function getDeviceType()
     if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
@@ -6413,6 +6484,13 @@ pcall(function()
             Callback = function(Value) playClickSound(); uiSettings.showOutsidePlayStop = Value == true; saveUiSettings(true); toggleOutsidePlayStopButton(Value == true) end })
         HomeToggles:Toggle({ Title = "Player speed tags", Icon = "users", Value = _G.BITWISE_PlayerSpeedTag_Active == true,
             Callback = function(Value) playClickSound(); if (Value == true) ~= (_G.BITWISE_PlayerSpeedTag_Active == true) then togglePlayerSpeedTags() end end })
+        if userLevel == "vip" then
+            HomeToggles:Button({ Title = "Set Speed dari Spedometer", Icon = "zap", Desc = "Gunakan kecepatan perangkat saat ini",
+                Callback = function() playClickSound(); setSpeedFromCurrent() end })
+        else
+            HomeToggles:Button({ Title = "Set Speed dari Spedometer (VIP)", Icon = "lock", Desc = "Fitur ini hanya tersedia untuk VIP",
+                Callback = function() playClickSound(); showNotification("VIP Required", "Fitur Set Speed dari Spedometer hanya untuk VIP.", 4) end })
+        end
     end)
 
     -- ========== RECORD VIP DIRECT EXECUTE ==========
@@ -6520,280 +6598,12 @@ end
     })
 end)
 
-    -- TAB 2: SPEED
+    -- TAB 2: MEMORY
+    local MemoryTab
     pcall(function()
-        local SpeedTab = Window:Tab({ Title = "Speed", Icon = "zap" })
-        SpeedTab:Section({ Title = "Spedometer", Icon = "gauge" })
-        SpeedTab:Toggle({
-            Title = "Speedometer",
-            Icon = "gauge",
-            Desc = "Show/hide real-time speed overlay luar UI (draggable)",
-            Value = false,
-            Callback = function(Value)
-                playClickSound()
-                if (Value == true) ~= speedometerActive then
-                    toggleSpeedometer()
-                end
-            end
-        })
-        if userLevel == "vip" then
-            SpeedTab:Button({ Title = "Set Speed from Speedometer (VIP)", Icon = "zap", Desc = "Copy your current in-game speed as playback speed",
-                Callback = function() playClickSound(); setSpeedFromCurrent() end })
-        else
-            SpeedTab:Button({ Title = "Set Speed from Speedometer (VIP Only)", Icon = "lock", Desc = "Upgrade to VIP to use this feature",
-                Callback = function() playClickSound(); showNotification("VIP Required","🔒 This feature is VIP only!\nGet key at discord.gg/fsNpvCCqxq",4) end })
-        end
-        -- Fitur VIP dipindahkan ke tab Speed/Spedometer.
-        if userLevel == "vip" then
-            SpeedTab:Section({ Title = "Path Visualizer", Icon = "route" })
-            SpeedTab:Toggle({
-                Title = "Path Record",
-                Icon = "route",
-                Desc = "Show/hide path visual. Mode ini berat di HP; otomatis dimatikan saat Play agar smooth.",
-                Value = false,
-                Callback = function(Value)
-                    playClickSound()
-                    if (Value == true) ~= pathRecordActive then
-                        togglePathRecord()
-                    end
-                end
-            })
-            -- Tombol hapus path dihilangkan sesuai request. Path otomatis dibersihkan saat Path Record OFF.
-            SpeedTab:Section({ Title = "Ghost & Invisibility", Icon = "ghost" })
-            SpeedTab:Toggle({ Title = "Invisibility", Icon = "ghost", Desc = "Become semi-transparent ghost (ON/OFF)", Value = false,
-                Callback = function(Value)
-                    playClickSound()
-                    task.spawn(function()
-                        local desired = Value == true
-                        if _G.BITWISE_Invis_Active == desired then return end
-
-                        local char = player.Character
-                        if not char then showNotification("Ghost","❌ Character not found!",3); return end
-
-                        _G.BITWISE_Invis_Active = desired
-
-                        if not desired then
-                            for _, p in ipairs(char:GetDescendants()) do
-                                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0 end
-                            end
-                            if workspace:FindFirstChild("BITWISE_invischair") then workspace.BITWISE_invischair:Destroy() end
-                            showNotification("Ghost","👁️ Invisibility OFF",3)
-                        else
-                            local hrp   = char:FindFirstChild("HumanoidRootPart")
-                            local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
-                            if not hrp or not torso then showNotification("Ghost","❌ R6/R15 only!",3); _G.BITWISE_Invis_Active=false; return end
-                            for _, p in ipairs(char:GetDescendants()) do
-                                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0.5 end
-                            end
-                            local savedpos = hrp.CFrame
-                            task.wait()
-                            pcall(function() char:MoveTo(Vector3.new(-25.95,84,3537.55)) end)
-                            task.wait(0.15)
-                            local Seat = Instance.new("Seat", workspace)
-                            Seat.Anchored=false; Seat.CanCollide=false; Seat.Name="BITWISE_invischair"; Seat.Transparency=1
-                            Seat.Position=Vector3.new(-25.95,84,3537.55)
-                            local Weld = Instance.new("Weld", Seat)
-                            Weld.Part0=Seat; Weld.Part1=torso; Seat.CFrame=savedpos
-                            showNotification("Ghost","👻 Invisibility ON",3)
-                        end
-                    end)
-                end})
-            SpeedTab:Toggle({ Title = "Ghost Speed", Icon = "zap", Desc = "Toggle fast walk speed 50 studs/s", Value = false,
-                Callback = function(Value)
-                    playClickSound()
-                    task.spawn(function()
-                        local desired = Value == true
-                        if _G.BITWISE_GhostSpeed_Active == desired then return end
-
-                        local _, hum = getChar()
-                        if not hum then showNotification("Ghost","❌ Character not found!",3); return end
-
-                        _G.BITWISE_GhostSpeed_Active = desired
-                        if not desired then
-                            hum.WalkSpeed = 16
-                            showNotification("Ghost","⚡ Ghost Speed OFF",3)
-                        else
-                            hum.WalkSpeed = 50
-                            showNotification("Ghost","⚡ Ghost Speed ON (50)",3)
-                        end
-                    end)
-                end})
-            SpeedTab:Toggle({ Title = "Noclip", Icon = "door-open", Desc = "Walk through walls", Value = false,
-                Callback = function(Value)
-                    playClickSound()
-                    task.spawn(function()
-                        local desired = Value == true
-                        if _G.BITWISE_Noclip_Active == desired then return end
-
-                        local char = player.Character
-                        if not char then showNotification("Ghost","❌ Character not found!",3); return end
-
-                        _G.BITWISE_Noclip_Active = desired
-                        if not desired then
-                            for _, p in ipairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end
-                            showNotification("Ghost","🚪 Noclip OFF",3)
-                        else
-                            for _, p in ipairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end
-                            showNotification("Ghost","🚪 Noclip ON",3)
-                        end
-                    end)
-                end})
-            SpeedTab:Section({ Title = "ESP & Chams", Icon = "palette" })
-            SpeedTab:Toggle({ Title = "ESP Chams (Rainbow)", Icon = "rainbow", Desc = "Highlight all players with rainbow color", Value = false,
-                Callback = function(Value)
-                    playClickSound()
-                    task.spawn(function()
-                        local desired = Value == true
-                        if _G.BITWISE_ESP_Active == desired then return end
-
-                        _G.BITWISE_ESP_Active = desired
-                        local cacheName  = "BITWISE_ChamsCache"
-                        local cache_folder = Workspace:FindFirstChild(cacheName)
-                        if not desired then
-                            if cache_folder then cache_folder:Destroy() end
-                            showNotification("ESP","🌈 Rainbow ESP OFF",3)
-                        else
-                            if not cache_folder then cache_folder=Instance.new("Folder",Workspace); cache_folder.Name=cacheName end
-                            local redFolder = Workspace:FindFirstChild("BITWISE_ChamsCache_Red")
-                            if redFolder then redFolder:Destroy(); _G.BITWISE_RedESP_Active=false end
-                            task.spawn(function()
-                                while _G.BITWISE_ESP_Active and cache_folder and cache_folder.Parent do
-                                    local rainbow = Color3.fromHSV(tick()%5/5,1,1)
-                                    for _, plr in pairs(Players:GetPlayers()) do
-                                        if plr ~= player and plr.Character then
-                                            local high = cache_folder:FindFirstChild(plr.Name)
-                                            if not high then high=Instance.new("Highlight",cache_folder); high.Name=plr.Name end
-                                            pcall(function()
-                                                high.Adornee=plr.Character; high.FillColor=rainbow
-                                                high.OutlineColor=Color3.fromRGB(255,255,255); high.FillTransparency=0.5
-                                                high.OutlineTransparency=0; high.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
-                                            end)
-                                        end
-                                    end
-                                    task.wait(0.1)
-                                end
-                                if cache_folder and cache_folder.Parent then cache_folder:Destroy() end
-                            end)
-                            showNotification("ESP","🌈 Rainbow ESP ON",3)
-                        end
-                    end)
-                end})
-            SpeedTab:Toggle({ Title = "ESP Chams (Red Solid)", Icon = "circle", Desc = "Highlight all players with solid red", Value = false,
-                Callback = function(Value)
-                    playClickSound()
-                    task.spawn(function()
-                        local desired = Value == true
-                        if _G.BITWISE_RedESP_Active == desired then return end
-
-                        _G.BITWISE_RedESP_Active = desired
-                        local cacheName    = "BITWISE_ChamsCache_Red"
-                        local cache_folder = Workspace:FindFirstChild(cacheName)
-                        if not desired then
-                            if cache_folder then cache_folder:Destroy() end
-                            showNotification("ESP","🔴 Red ESP OFF",3)
-                        else
-                            if not cache_folder then cache_folder=Instance.new("Folder",Workspace); cache_folder.Name=cacheName end
-                            local rainbowFolder = Workspace:FindFirstChild("BITWISE_ChamsCache")
-                            if rainbowFolder then rainbowFolder:Destroy(); _G.BITWISE_ESP_Active=false end
-                            for _, plr in pairs(Players:GetPlayers()) do
-                                if plr ~= player and plr.Character then
-                                    local high = Instance.new("Highlight", cache_folder)
-                                    high.Name=plr.Name; high.Adornee=plr.Character
-                                    high.FillColor=Color3.fromRGB(255,0,0); high.OutlineColor=Color3.fromRGB(255,100,100)
-                                    high.FillTransparency=0.5; high.OutlineTransparency=0.2
-                                    high.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
-                                end
-                            end
-                            showNotification("ESP","🔴 Red ESP ON",3)
-                        end
-                    end)
-                end})
-            SpeedTab:Toggle({ Title = "ESP Name", Icon = "badge", Desc = "Show player names with distance & health", Value = false,
-                Callback = function(Value)
-                    playClickSound()
-                    task.spawn(function()
-                        local desired = Value == true
-                        if _G.BITWISE_NameTag_Active == desired then return end
-
-                        _G.BITWISE_NameTag_Active = desired
-                        local tagFolder = Workspace:FindFirstChild("BITWISE_NameTags")
-                        if not desired then
-                            if tagFolder then tagFolder:Destroy() end
-                            showNotification("ESP","🏷️ ESP Name OFF",3)
-                        else
-                            if tagFolder then tagFolder:Destroy() end
-                            tagFolder = Instance.new("Folder", Workspace); tagFolder.Name = "BITWISE_NameTags"
-                            local function createTag(plr)
-                                if not plr.Character or not plr.Character:FindFirstChild("Head") then return end
-                                if tagFolder:FindFirstChild(plr.Name) then return end
-                                local billboard = Instance.new("BillboardGui")
-                                billboard.Name=plr.Name; billboard.Adornee=plr.Character.Head
-                                billboard.Size=UDim2.new(0,200,0,30); billboard.StudsOffset=Vector3.new(0,2.5,0)
-                                billboard.AlwaysOnTop=true; billboard.Parent=tagFolder
-                                local bg = Instance.new("Frame", billboard)
-                                bg.Size=UDim2.new(1,0,1,0); bg.BackgroundColor3=Color3.fromRGB(0,0,0); bg.BackgroundTransparency=0.5
-                                local label = Instance.new("TextLabel", billboard)
-                                label.Size=UDim2.new(1,0,1,0); label.BackgroundTransparency=1
-                                label.TextColor3=Color3.fromRGB(255,255,255); label.Font=Enum.Font.GothamBold
-                                label.TextScaled=true; label.Text=plr.Name
-                                task.spawn(function()
-                                    while _G.BITWISE_NameTag_Active and billboard and billboard.Parent do
-                                        if plr.Character and plr.Character:FindFirstChild("Humanoid") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                                            local hum=plr.Character.Humanoid; local hrp=plr.Character:FindFirstChild("HumanoidRootPart")
-                                            local myHrp=player.Character.HumanoidRootPart
-                                            local dist=hrp and myHrp and (hrp.Position-myHrp.Position).Magnitude or 0
-                                            label.Text=plr.Name.." | "..math.floor(dist).."m | HP:"..math.floor(hum.Health)
-                                        end
-                                        task.wait(0.3)
-                                    end
-                                end)
-                            end
-                            for _, plr in pairs(Players:GetPlayers()) do if plr~=player then createTag(plr) end end
-                            showNotification("ESP","🏷️ ESP Name ON",3)
-                        end
-                    end)
-                end})
-            -- SpeedTab:Button({ Title = "⚡ Speed Player Tags", Desc = "Tampilkan speed player lain di atas kepala (Toggle)",
-            --     Callback = function()
-            --         task.spawn(function()
-            --             togglePlayerSpeedTags()
-            --         end)
-            --     end})
-             SpeedTab:Section({ Title = "Emotes & Fun", Icon = "smile" })
-             SpeedTab:Button({ Title = "UNLOCK EMOTES", Icon = "smile-plus", Desc = "Unlock all emotes in-game",
-                 Callback = function()
-                     playClickSound()
-                     showNotification("VIP+","🎭 Unlocking Emotes...",2)
-                     task.spawn(function()
-                         local success, err = pcall(function()
-                             error("Endpoint Emotes lama tidak tersedia pada panel MDW baru")
-                         end)
-                         if success then showNotification("VIP+","✅ Emotes Unlocked!",3)
-                         else showNotification("VIP+","❌ Failed: "..tostring(err),3) end
-                     end)
-                 end})
-        else
-            SpeedTab:Section({ Title = "VIP Features Locked", Icon = "lock" })
-            SpeedTab:Paragraph({
-                Title = "Upgrade to VIP to unlock",
-                Image = "lock",
-                ImageSize = 20,
-                Desc = [[• Path Record Visualizer
-• Load Gunung API Routes
-• Set Speed from Speedometer
-• Ghost & Invisibility
-• ESP & Chams]],
-                Color = "Yellow",
-            })
-            SpeedTab:Button({ Title = "Buy VIP Key", Icon = "shopping-cart", Desc = "Join Discord store to purchase VIP access",
-                Callback = function()
-                    playClickSound()
-                    pcall(function() setclipboard("https://discord.gg/fsNpvCCqxq") end)
-                    pcall(function() clipboard.set("https://discord.gg/fsNpvCCqxq") end)
-                    showNotification("VIP Store","Discord link copied!\ndiscord.gg/fsNpvCCqxq",4)
-                end})
-        end
+        MemoryTab = Window:Tab({ Title = "Memory", Icon = "cpu" })
     end)
+
     -- TAB 3: DATA
 pcall(function()
     local DataTab = Window:Tab({ Title = "Load", Icon = "database" })
@@ -6951,7 +6761,296 @@ end)
         })
     end)
 
-    -- TAB 5: SETTINGS
+    -- TAB 5: VIP (fitur tetap tersedia, tetapi tidak ditampilkan di menu bar utama).
+    -- TAB 4: VIP
+    pcall(function()
+        local VIPTab = MemoryTab
+        if userLevel == "vip" then
+            VIPTab:Section({ Title = "Path Visualizer", Icon = "route" })
+            VIPTab:Toggle({
+                Title = "Path Record",
+                Icon = "route",
+                Desc = "Show/hide path visual. Mode ini berat di HP; otomatis dimatikan saat Play agar smooth.",
+                Value = false,
+                Callback = function(Value)
+                    playClickSound()
+                    if (Value == true) ~= pathRecordActive then
+                        togglePathRecord()
+                    end
+                end
+            })
+            -- Tombol hapus path dihilangkan sesuai request. Path otomatis dibersihkan saat Path Record OFF.
+            VIPTab:Section({ Title = "Ghost & Invisibility", Icon = "ghost" })
+            VIPTab:Toggle({ Title = "Invisibility", Icon = "ghost", Desc = "Become semi-transparent ghost (ON/OFF)", Value = false,
+                Callback = function(Value)
+                    playClickSound()
+                    task.spawn(function()
+                        local desired = Value == true
+                        if _G.BITWISE_Invis_Active == desired then return end
+
+                        local char = player.Character
+                        if not char then showNotification("Ghost","❌ Character not found!",3); return end
+
+                        _G.BITWISE_Invis_Active = desired
+
+                        if not desired then
+                            for _, p in ipairs(char:GetDescendants()) do
+                                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0 end
+                            end
+                            if workspace:FindFirstChild("BITWISE_invischair") then workspace.BITWISE_invischair:Destroy() end
+                            showNotification("Ghost","👁️ Invisibility OFF",3)
+                        else
+                            local hrp   = char:FindFirstChild("HumanoidRootPart")
+                            local torso = char:FindFirstChild("Torso") or char:FindFirstChild("UpperTorso")
+                            if not hrp or not torso then showNotification("Ghost","❌ R6/R15 only!",3); _G.BITWISE_Invis_Active=false; return end
+                            for _, p in ipairs(char:GetDescendants()) do
+                                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0.5 end
+                            end
+                            local savedpos = hrp.CFrame
+                            task.wait()
+                            pcall(function() char:MoveTo(Vector3.new(-25.95,84,3537.55)) end)
+                            task.wait(0.15)
+                            local Seat = Instance.new("Seat", workspace)
+                            Seat.Anchored=false; Seat.CanCollide=false; Seat.Name="BITWISE_invischair"; Seat.Transparency=1
+                            Seat.Position=Vector3.new(-25.95,84,3537.55)
+                            local Weld = Instance.new("Weld", Seat)
+                            Weld.Part0=Seat; Weld.Part1=torso; Seat.CFrame=savedpos
+                            showNotification("Ghost","👻 Invisibility ON",3)
+                        end
+                    end)
+                end})
+            VIPTab:Toggle({ Title = "Ghost Speed", Icon = "zap", Desc = "Toggle fast walk speed 50 studs/s", Value = false,
+                Callback = function(Value)
+                    playClickSound()
+                    task.spawn(function()
+                        local desired = Value == true
+                        if _G.BITWISE_GhostSpeed_Active == desired then return end
+
+                        local _, hum = getChar()
+                        if not hum then showNotification("Ghost","❌ Character not found!",3); return end
+
+                        _G.BITWISE_GhostSpeed_Active = desired
+                        if not desired then
+                            hum.WalkSpeed = 16
+                            showNotification("Ghost","⚡ Ghost Speed OFF",3)
+                        else
+                            hum.WalkSpeed = 50
+                            showNotification("Ghost","⚡ Ghost Speed ON (50)",3)
+                        end
+                    end)
+                end})
+            VIPTab:Toggle({ Title = "Noclip", Icon = "door-open", Desc = "Walk through walls", Value = false,
+                Callback = function(Value)
+                    playClickSound()
+                    task.spawn(function()
+                        local desired = Value == true
+                        if _G.BITWISE_Noclip_Active == desired then return end
+
+                        local char = player.Character
+                        if not char then showNotification("Ghost","❌ Character not found!",3); return end
+
+                        _G.BITWISE_Noclip_Active = desired
+                        if not desired then
+                            for _, p in ipairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end
+                            showNotification("Ghost","🚪 Noclip OFF",3)
+                        else
+                            for _, p in ipairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end
+                            showNotification("Ghost","🚪 Noclip ON",3)
+                        end
+                    end)
+                end})
+            VIPTab:Section({ Title = "ESP & Chams", Icon = "palette" })
+            VIPTab:Toggle({ Title = "ESP Chams (Rainbow)", Icon = "rainbow", Desc = "Highlight all players with rainbow color", Value = false,
+                Callback = function(Value)
+                    playClickSound()
+                    task.spawn(function()
+                        local desired = Value == true
+                        if _G.BITWISE_ESP_Active == desired then return end
+
+                        _G.BITWISE_ESP_Active = desired
+                        local cacheName  = "BITWISE_ChamsCache"
+                        local cache_folder = Workspace:FindFirstChild(cacheName)
+                        if not desired then
+                            if cache_folder then cache_folder:Destroy() end
+                            showNotification("ESP","🌈 Rainbow ESP OFF",3)
+                        else
+                            if not cache_folder then cache_folder=Instance.new("Folder",Workspace); cache_folder.Name=cacheName end
+                            local redFolder = Workspace:FindFirstChild("BITWISE_ChamsCache_Red")
+                            if redFolder then redFolder:Destroy(); _G.BITWISE_RedESP_Active=false end
+                            task.spawn(function()
+                                while _G.BITWISE_ESP_Active and cache_folder and cache_folder.Parent do
+                                    local rainbow = Color3.fromHSV(tick()%5/5,1,1)
+                                    for _, plr in pairs(Players:GetPlayers()) do
+                                        if plr ~= player and plr.Character then
+                                            local high = cache_folder:FindFirstChild(plr.Name)
+                                            if not high then high=Instance.new("Highlight",cache_folder); high.Name=plr.Name end
+                                            pcall(function()
+                                                high.Adornee=plr.Character; high.FillColor=rainbow
+                                                high.OutlineColor=Color3.fromRGB(255,255,255); high.FillTransparency=0.5
+                                                high.OutlineTransparency=0; high.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+                                            end)
+                                        end
+                                    end
+                                    task.wait(0.1)
+                                end
+                                if cache_folder and cache_folder.Parent then cache_folder:Destroy() end
+                            end)
+                            showNotification("ESP","🌈 Rainbow ESP ON",3)
+                        end
+                    end)
+                end})
+            VIPTab:Toggle({ Title = "ESP Chams (Red Solid)", Icon = "circle", Desc = "Highlight all players with solid red", Value = false,
+                Callback = function(Value)
+                    playClickSound()
+                    task.spawn(function()
+                        local desired = Value == true
+                        if _G.BITWISE_RedESP_Active == desired then return end
+
+                        _G.BITWISE_RedESP_Active = desired
+                        local cacheName    = "BITWISE_ChamsCache_Red"
+                        local cache_folder = Workspace:FindFirstChild(cacheName)
+                        if not desired then
+                            if cache_folder then cache_folder:Destroy() end
+                            showNotification("ESP","🔴 Red ESP OFF",3)
+                        else
+                            if not cache_folder then cache_folder=Instance.new("Folder",Workspace); cache_folder.Name=cacheName end
+                            local rainbowFolder = Workspace:FindFirstChild("BITWISE_ChamsCache")
+                            if rainbowFolder then rainbowFolder:Destroy(); _G.BITWISE_ESP_Active=false end
+                            for _, plr in pairs(Players:GetPlayers()) do
+                                if plr ~= player and plr.Character then
+                                    local high = Instance.new("Highlight", cache_folder)
+                                    high.Name=plr.Name; high.Adornee=plr.Character
+                                    high.FillColor=Color3.fromRGB(255,0,0); high.OutlineColor=Color3.fromRGB(255,100,100)
+                                    high.FillTransparency=0.5; high.OutlineTransparency=0.2
+                                    high.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop
+                                end
+                            end
+                            showNotification("ESP","🔴 Red ESP ON",3)
+                        end
+                    end)
+                end})
+            VIPTab:Toggle({ Title = "ESP Name", Icon = "badge", Desc = "Show player names with distance & health", Value = false,
+                Callback = function(Value)
+                    playClickSound()
+                    task.spawn(function()
+                        local desired = Value == true
+                        if _G.BITWISE_NameTag_Active == desired then return end
+
+                        _G.BITWISE_NameTag_Active = desired
+                        local tagFolder = Workspace:FindFirstChild("BITWISE_NameTags")
+                        if not desired then
+                            if tagFolder then tagFolder:Destroy() end
+                            showNotification("ESP","🏷️ ESP Name OFF",3)
+                        else
+                            if tagFolder then tagFolder:Destroy() end
+                            tagFolder = Instance.new("Folder", Workspace); tagFolder.Name = "BITWISE_NameTags"
+                            local function createTag(plr)
+                                if not plr.Character or not plr.Character:FindFirstChild("Head") then return end
+                                if tagFolder:FindFirstChild(plr.Name) then return end
+                                local billboard = Instance.new("BillboardGui")
+                                billboard.Name=plr.Name; billboard.Adornee=plr.Character.Head
+                                billboard.Size=UDim2.new(0,200,0,30); billboard.StudsOffset=Vector3.new(0,2.5,0)
+                                billboard.AlwaysOnTop=true; billboard.Parent=tagFolder
+                                local bg = Instance.new("Frame", billboard)
+                                bg.Size=UDim2.new(1,0,1,0); bg.BackgroundColor3=Color3.fromRGB(0,0,0); bg.BackgroundTransparency=0.5
+                                local label = Instance.new("TextLabel", billboard)
+                                label.Size=UDim2.new(1,0,1,0); label.BackgroundTransparency=1
+                                label.TextColor3=Color3.fromRGB(255,255,255); label.Font=Enum.Font.GothamBold
+                                label.TextScaled=true; label.Text=plr.Name
+                                task.spawn(function()
+                                    while _G.BITWISE_NameTag_Active and billboard and billboard.Parent do
+                                        if plr.Character and plr.Character:FindFirstChild("Humanoid") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                                            local hum=plr.Character.Humanoid; local hrp=plr.Character:FindFirstChild("HumanoidRootPart")
+                                            local myHrp=player.Character.HumanoidRootPart
+                                            local dist=hrp and myHrp and (hrp.Position-myHrp.Position).Magnitude or 0
+                                            label.Text=plr.Name.." | "..math.floor(dist).."m | HP:"..math.floor(hum.Health)
+                                        end
+                                        task.wait(0.3)
+                                    end
+                                end)
+                            end
+                            for _, plr in pairs(Players:GetPlayers()) do if plr~=player then createTag(plr) end end
+                            showNotification("ESP","🏷️ ESP Name ON",3)
+                        end
+                    end)
+                end})
+            -- VIPTab:Button({ Title = "⚡ Speed Player Tags", Desc = "Tampilkan speed player lain di atas kepala (Toggle)",
+            --     Callback = function()
+            --         task.spawn(function()
+            --             togglePlayerSpeedTags()
+            --         end)
+            --     end})
+             VIPTab:Section({ Title = "Emotes & Fun", Icon = "smile" })
+             VIPTab:Button({ Title = "UNLOCK EMOTES", Icon = "smile-plus", Desc = "Unlock all emotes in-game",
+                 Callback = function()
+                     playClickSound()
+                     showNotification("VIP+","🎭 Unlocking Emotes...",2)
+                     task.spawn(function()
+                         local success, err = pcall(function()
+                             error("Endpoint Emotes lama tidak tersedia pada panel MDW baru")
+                         end)
+                         if success then showNotification("VIP+","✅ Emotes Unlocked!",3)
+                         else showNotification("VIP+","❌ Failed: "..tostring(err),3) end
+                     end)
+                 end})
+        else
+            VIPTab:Section({ Title = "VIP Features Locked", Icon = "lock" })
+            VIPTab:Paragraph({
+                Title = "Upgrade to VIP to unlock",
+                Image = "lock",
+                ImageSize = 20,
+                Desc = [[• Path Record Visualizer
+• Load Gunung API Routes
+• Set Speed from Speedometer
+• Ghost & Invisibility
+• ESP & Chams]],
+                Color = "Yellow",
+            })
+            VIPTab:Button({ Title = "Buy VIP Key", Icon = "shopping-cart", Desc = "Join Discord store to purchase VIP access",
+                Callback = function()
+                    playClickSound()
+                    pcall(function() setclipboard("https://discord.gg/fsNpvCCqxq") end)
+                    pcall(function() clipboard.set("https://discord.gg/fsNpvCCqxq") end)
+                    showNotification("VIP Store","Discord link copied!\ndiscord.gg/fsNpvCCqxq",4)
+                end})
+        end
+    end)
+
+    -- TAB 5: CHAT
+    pcall(function()
+        local ChatTab = Window:Tab({ Title = "Chat", Icon = "message-circle" })
+        ChatTab:Section({ Title = "Online Chat", Icon = "message-circle" })
+        chatMessageParagraph = ChatTab:Paragraph({
+            Title = "Riwayat Pesan",
+            Icon = "messages-square",
+            Desc = "Belum ada pesan. Tekan Refresh untuk memuat chat."
+        })
+        ChatTab:Input({
+            Title = "Pesan",
+            Icon = "pencil",
+            Placeholder = "Tulis pesan ke pengguna VIP...",
+            Callback = function(Text) chatDraft = tostring(Text or "") end
+        })
+        ChatTab:Button({
+            Title = "Kirim Pesan",
+            Icon = "send",
+            Callback = function() playClickSound(); chatSend() end
+        })
+        ChatTab:Button({
+            Title = "Refresh Chat",
+            Icon = "refresh-cw",
+            Callback = function() playClickSound(); chatRefresh(false) end
+        })
+        task.spawn(function()
+            while Window do
+                task.wait(10)
+                pcall(function() chatRefresh(true) end)
+            end
+        end)
+        pcall(function() chatRefresh(true) end)
+    end)
+
+    -- TAB 6: SETTINGS
     pcall(function()
         local SettingsTab = Window:Tab({ Title = "Setting", Icon = "settings" })
         SettingsTab:Section({ Title = "UI Customization", Icon = "paintbrush" })
