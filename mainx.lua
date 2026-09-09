@@ -762,6 +762,8 @@ local chatMessages = {}
 local chatLastRefresh = 0
 local chatDraft = ""
 local chatMessageParagraph = nil
+local chatOnlineParagraph = nil
+local chatComposerStatusParagraph = nil
 
 local function chatAuthorName()
     return player and (player.DisplayName or player.Name) or "Roblox User"
@@ -770,19 +772,20 @@ end
 local function chatRenderMessages()
     if not chatMessageParagraph or not chatMessageParagraph.SetDesc then return end
     if #chatMessages == 0 then
-        chatMessageParagraph:SetDesc("Belum ada pesan. Tekan Refresh untuk memuat chat.")
+        chatMessageParagraph:SetDesc("╭─ GROUP CHAT\n│ Belum ada pesan. Mulai percakapan.\n╰────────────────────")
         return
     end
-    local lines = {}
-    local startIndex = math.max(1, #chatMessages - 19)
+    local lines = { "╭─ GROUP CHAT" }
+    local startIndex = math.max(1, #chatMessages - 11)
     for i = startIndex, #chatMessages do
         local m = chatMessages[i]
         local author = tostring(m.author or m.username or "User")
-        local text = tostring(m.message or "")
+        local text = tostring(m.message or ""):gsub("\n", " ")
         local created = tostring(m.createdAt or ""):gsub("T", " "):gsub("Z", "")
         if #created > 16 then created = created:sub(1, 16) end
-        lines[#lines + 1] = string.format("[%s] %s: %s", created, author, text)
+        lines[#lines + 1] = string.format("│ %s  %s\n│   ╭─ %s\n│   ╰─ %s", author, created, text, " ")
     end
+    lines[#lines + 1] = "╰────────────────────"
     chatMessageParagraph:SetDesc(table.concat(lines, "\n"))
 end
 
@@ -804,7 +807,15 @@ local function chatRefresh(silent)
     end
     chatMessages = type(data.messages) == "table" and data.messages or {}
     chatLastRefresh = os.clock()
+    if chatOnlineParagraph and chatOnlineParagraph.SetDesc then
+        local online = tonumber(data.online) or 0
+        local muted = data.muted and "  •  CHAT DIMUTE" or ""
+        chatOnlineParagraph:SetDesc(string.format("%d online   TERHUBUNG%s", online, muted))
+    end
     chatRenderMessages()
+    if chatComposerStatusParagraph and chatComposerStatusParagraph.SetDesc then
+        chatComposerStatusParagraph:SetDesc(string.format("%d/500  •  Enter untuk kirim", #tostring(chatDraft or "")))
+    end
     if not silent then showNotification("Chat", "Pesan diperbarui.", 2) end
     return true
 end
@@ -7019,33 +7030,47 @@ end)
     -- TAB 5: CHAT
     pcall(function()
         local ChatTab = Window:Tab({ Title = "Chat", Icon = "message-circle" })
-        ChatTab:Section({ Title = "Online Chat", Icon = "message-circle" })
+        ChatTab:Section({ Title = "CONFIGS", Icon = "message-circle" })
+        ChatTab:Paragraph({ Title = "GROUP CHAT", Icon = "users", Desc = "Chat bersama pengguna VIP" })
+        chatOnlineParagraph = ChatTab:Paragraph({ Title = "STATUS", Icon = "radio", Desc = "0 online   TERHUBUNG" })
         chatMessageParagraph = ChatTab:Paragraph({
-            Title = "Riwayat Pesan",
+            Title = "Messages",
             Icon = "messages-square",
-            Desc = "Belum ada pesan. Tekan Refresh untuk memuat chat."
+            Desc = "╭─ GROUP CHAT\n│ Belum ada pesan. Mulai percakapan.\n╰────────────────────"
+        })
+        ChatTab:Button({
+            Title = "Paste",
+            Icon = "clipboard",
+            Callback = function()
+                local pasted = nil
+                pcall(function() if getclipboard then pasted = getclipboard() end end)
+                pcall(function() if not pasted and clipboard and clipboard.get then pasted = clipboard.get() end end)
+                if pasted and #tostring(pasted) > 0 then
+                    chatDraft = tostring(pasted):sub(1, 500)
+                    if chatComposerStatusParagraph and chatComposerStatusParagraph.SetDesc then chatComposerStatusParagraph:SetDesc(string.format("%d/500  •  Enter untuk kirim", #chatDraft)) end
+                    showNotification("Chat", "Teks ditempel ke draft.", 2)
+                else showNotification("Chat", "Clipboard kosong atau tidak tersedia.", 3) end
+            end
+        })
+        ChatTab:Button({
+            Title = "Type",
+            Icon = "keyboard",
+            Callback = function() showNotification("Chat", "Ketik pesan pada kolom Pesan.", 2) end
         })
         ChatTab:Input({
             Title = "Pesan",
             Icon = "pencil",
-            Placeholder = "Tulis pesan ke pengguna VIP...",
-            Callback = function(Text) chatDraft = tostring(Text or "") end
-        })
-        ChatTab:Button({
-            Title = "Kirim Pesan",
-            Icon = "send",
-            Callback = function() playClickSound(); chatSend() end
-        })
-        ChatTab:Button({
-            Title = "Refresh Chat",
-            Icon = "refresh-cw",
-            Callback = function() playClickSound(); chatRefresh(false) end
-        })
-        task.spawn(function()
-            while Window do
-                task.wait(10)
-                pcall(function() chatRefresh(true) end)
+            Placeholder = "Ketik pesan...",
+            Callback = function(Text)
+                chatDraft = tostring(Text or ""):sub(1, 500)
+                if chatComposerStatusParagraph and chatComposerStatusParagraph.SetDesc then chatComposerStatusParagraph:SetDesc(string.format("%d/500  •  Enter untuk kirim", #chatDraft)) end
             end
+        })
+        chatComposerStatusParagraph = ChatTab:Paragraph({ Title = "", Desc = "0/500  •  Enter untuk kirim" })
+        ChatTab:Button({ Title = "Send", Icon = "send", Callback = function() playClickSound(); chatSend() end })
+        ChatTab:Button({ Title = "Refresh", Icon = "refresh-cw", Callback = function() playClickSound(); chatRefresh(false) end })
+        task.spawn(function()
+            while Window do task.wait(10); pcall(function() chatRefresh(true) end) end
         end)
         pcall(function() chatRefresh(true) end)
     end)
