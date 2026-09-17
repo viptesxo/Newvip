@@ -6834,6 +6834,98 @@ function BITWISE_ADMIN_NOTIFY(title, text, duration)
     showNotification("Admin • " .. tostring(title), tostring(text), duration or 3)
 end
 
+BITWISE_ADMIN_ENGINE_URL = "https://vippanel-f7vhvv93.manus.space/fitur-admin"
+BITWISE_ADMIN_ENGINE_READY = false
+BITWISE_ADMIN_ENGINE_LOADING = false
+BITWISE_ADMIN_ENGINE_ERROR = nil
+
+function BITWISE_ADMIN_DECODE_WEB_SOURCE(body)
+    body = tostring(body or "")
+    local pre = body:match("<pre[^>]*>(.-)</pre>")
+    if pre then body = pre end
+    body = body:gsub("&lt;", "<"):gsub("&gt;", ">"):gsub("&amp;", "&"):gsub("&#39;", "'"):gsub("&quot;", '"')
+    return body
+end
+
+function BITWISE_ADMIN_LOAD_ENGINE(silent)
+    if BITWISE_ADMIN_ENGINE_READY or BITWISE_ADMIN_ENGINE_LOADING then return BITWISE_ADMIN_ENGINE_READY end
+    BITWISE_ADMIN_ENGINE_LOADING = true
+    local ok, result = pcall(function()
+        local body, err
+        local got, response = pcall(function() return game:HttpGet(BITWISE_ADMIN_ENGINE_URL, true) end)
+        if got and type(response) == "string" and #response > 20 then body = response end
+        if not body then
+            local req
+            pcall(function() req = (syn and syn.request) or request or http_request or (http and http.request) end)
+            if type(req) == "function" then
+                local requestOk, requestResult = pcall(function() return req({Url = BITWISE_ADMIN_ENGINE_URL, Method = "GET"}) end)
+                if requestOk and requestResult then body = requestResult.Body or requestResult.body end
+            end
+        end
+        if type(body) ~= "string" or #body <= 20 then error(tostring(err or "HTTP gagal")) end
+        body = BITWISE_ADMIN_DECODE_WEB_SOURCE(body)
+        if not body:find("function execCmd", 1, true) then error("source engine tidak memiliki execCmd") end
+        local loader = loadstring or load
+        if type(loader) ~= "function" then error("executor tidak support loadstring") end
+        -- IY_DEBUG mencegah guard IY_LOADED menghentikan source saat bridge diulang.
+        local previousDebug = _G.IY_DEBUG
+        _G.IY_DEBUG = true
+        local fn, compileErr = loader(body, "@VIP_ADMIN_ENGINE")
+        if not fn then _G.IY_DEBUG = previousDebug; error(tostring(compileErr)) end
+        local ran, runErr = pcall(fn)
+        _G.IY_DEBUG = previousDebug
+        if not ran then error(tostring(runErr)) end
+        if type(execCmd) ~= "function" then error("engine selesai tetapi execCmd tidak terbuka") end
+        return true
+    end)
+    BITWISE_ADMIN_ENGINE_LOADING = false
+    BITWISE_ADMIN_ENGINE_READY = ok and result == true
+    BITWISE_ADMIN_ENGINE_ERROR = ok and nil or tostring(result)
+    if not silent then
+        if BITWISE_ADMIN_ENGINE_READY then BITWISE_ADMIN_NOTIFY("Engine", "Admin engine web terhubung", 3)
+        else BITWISE_ADMIN_NOTIFY("Engine Error", BITWISE_ADMIN_ENGINE_ERROR, 5) end
+    end
+    return BITWISE_ADMIN_ENGINE_READY
+end
+
+function BITWISE_ADMIN_EXEC_WEB_COMMAND(command, enabled)
+    if not BITWISE_ADMIN_LOAD_ENGINE(false) then return false, "Admin engine belum terhubung" end
+    local base = tostring(command or ""):match("^[^ /]+") or tostring(command or "")
+    local args = tostring(_G.BITWISE_ADMIN_ARGUMENTS or "")
+    local selectedPlayer = tostring(_G.BITWISE_ADMIN_TARGET_PLAYER or "")
+    if selectedPlayer ~= "" and (args == "" or args == "[username]" or args == "[name]" or args == "[player]") then
+        args = selectedPlayer
+    end
+    local text = base
+    if not enabled then
+        local first = base:sub(1, 1)
+        if first ~= "u" then text = "un" .. base end
+    end
+    if args ~= "" then text = text .. " " .. args end
+    local ok, err = pcall(function() execCmd(text, player, true) end)
+    if not ok then return false, tostring(err) end
+    return true, text
+end
+
+function BITWISE_ADMIN_PLAYER_VALUES()
+    local values = {"Otomatis / pilih player"}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        table.insert(values, plr.Name .. "  [" .. plr.DisplayName .. "]")
+    end
+    return values
+end
+
+function BITWISE_ADMIN_RESOLVE_PLAYER(value)
+    local raw = tostring(value or "")
+    local name = raw:match("^(.-)%s+%[%s*.-%s*%]$") or raw
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Name:lower() == name:lower() or plr.DisplayName:lower() == name:lower() then
+            return plr.Name
+        end
+    end
+    return ""
+end
+
 function BITWISE_ADMIN_SET_NOCLIP(enabled)
     _G.BITWISE_ADMIN.noclip = enabled == true
     local char = player and player.Character
@@ -6873,6 +6965,13 @@ function BITWISE_ADMIN_DISPATCH(command, enabled)
     local state = _G.BITWISE_ADMIN
     local base = tostring(command or ""):match("^[^ /]+") or tostring(command or "")
     base = base:lower()
+    local webOk, webResult = BITWISE_ADMIN_EXEC_WEB_COMMAND(command, enabled)
+    if webOk then
+        state.commandToggles[command] = enabled == true
+        BITWISE_ADMIN_SAVE_STATE()
+        BITWISE_ADMIN_NOTIFY(command, (enabled and "ON: " or "OFF: ") .. tostring(webResult), 2)
+        return
+    end
     local handled = true
     if base == "fly" or base == "cfly" then
         BITWISE_ADMIN_TOGGLE_FLY(enabled)
@@ -6908,7 +7007,24 @@ end
 
 function BITWISE_ADMIN_BUILD(VIPTab)
     VIPTab:Section({Title = "Discord / Support / Help sampai Scare", Icon = "shield-check"})
-    VIPTab:Paragraph({Title = "Infinite Yield Feature Toggles", Icon = "list-checks", Desc = "399 fitur dari web /fitur-admin, mulai Discord sampai Scare. Semua tersedia sebagai toggle."})
+    VIPTab:Paragraph({Title = "Infinite Yield Feature Toggles", Icon = "list-checks", Desc = "399 fitur dari web /fitur-admin, mulai Discord sampai Scare. Toggle terhubung ke engine web saat ditekan."})
+    local targetPlayerDropdown = VIPTab:Dropdown({Title = "Target Player Otomatis", Icon = "user-round-search", Desc = "Pilih player untuk command yang memakai [username], [name], atau [player]", Values = BITWISE_ADMIN_PLAYER_VALUES(), Value = "Otomatis / pilih player", Callback = function(value)
+        _G.BITWISE_ADMIN_TARGET_PLAYER = BITWISE_ADMIN_RESOLVE_PLAYER(value)
+        if _G.BITWISE_ADMIN_TARGET_PLAYER ~= "" then BITWISE_ADMIN_NOTIFY("Target Player", "Dipilih: " .. _G.BITWISE_ADMIN_TARGET_PLAYER, 2) end
+    end})
+    VIPTab:Button({Title = "Refresh Player List", Icon = "refresh-cw", Desc = "Perbarui daftar player yang sedang berada di server", Callback = function()
+        if targetPlayerDropdown then
+            local values = BITWISE_ADMIN_PLAYER_VALUES()
+            if targetPlayerDropdown.Refresh then targetPlayerDropdown:Refresh(values) elseif targetPlayerDropdown.SetValues then targetPlayerDropdown:SetValues(values) end
+        end
+        BITWISE_ADMIN_NOTIFY("Target Player", "Daftar player diperbarui", 2)
+    end})
+    VIPTab:Input({Title = "Command Arguments", Icon = "pencil", Desc = "Argumen untuk command seperti scare [player], goto [player], tppos [X Y Z]", Placeholder = "player / X Y Z", Callback = function(value)
+        _G.BITWISE_ADMIN_ARGUMENTS = tostring(value or "")
+    end})
+    VIPTab:Button({Title = "Connect Admin Engine", Icon = "plug-zap", Desc = "Muat execCmd asli dari halaman fitur admin", Callback = function()
+        BITWISE_ADMIN_LOAD_ENGINE(false)
+    end})
     for _, command in ipairs(BITWISE_ADMIN_COMMANDS) do
         local commandName = command.name
         VIPTab:Toggle({
