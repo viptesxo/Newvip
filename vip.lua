@@ -6401,6 +6401,529 @@ function startTopbarStatsIndicator()
     end)
 end
 
+-- ========== VIP ADMIN COMMAND TOGGLES (WEB: DISCORD -> SCARE) ==========
+-- Katalog diambil dari halaman /fitur-admin, mulai discord sampai scare.
+-- Setiap entry dibuat sebagai toggle di MemoryTab.
+BITWISE_ADMIN_COMMANDS = {
+    {name = "discord / support / help", desc = "Invite to the Infinite Yield support server."},
+    {name = "console", desc = "Loads Roblox console"},
+    {name = "oldconsole", desc = "Loads old Roblox console"},
+    {name = "explorer / dex", desc = "Opens DEX by Moon"},
+    {name = "olddex / odex", desc = "Opens Old DEX by Moon"},
+    {name = "remotespy / rspy", desc = "Opens Simple Spy V3"},
+    {name = "audiologger / alogger", desc = "Opens Edges audio logger"},
+    {name = "serverinfo / info", desc = "Gives you info about the server"},
+    {name = "jobid", desc = "Copies the games JobId to your clipboard"},
+    {name = "notifyjobid", desc = "Notifies you the games JobId"},
+    {name = "rejoin / rj", desc = "Makes you rejoin the game"},
+    {name = "autorejoin / autorj", desc = "Automatically rejoins the server if you get kicked/disconnected"},
+    {name = "serverhop / shop", desc = "Teleports you to a different server"},
+    {name = "joinplayer [username / ID] [place ID]", desc = "Joins a specific players server"},
+    {name = "gameteleport / gametp [place ID]", desc = "Joins a game by ID"},
+    {name = "antiidle / antiafk", desc = "Prevents the game from kicking you for being idle/afk"},
+    {name = "datalimit [num]", desc = "Set outgoing KBPS limit"},
+    {name = "replicationlag / backtrack [num]", desc = "Set IncomingReplicationLag"},
+    {name = "creatorid / creator", desc = "Notifies you the creators ID"},
+    {name = "copycreatorid / copycreator", desc = "Copies the creators ID to your clipboard"},
+    {name = "setcreatorid / setcreator", desc = "Sets your userid to the creators ID"},
+    {name = "noprompts", desc = "Prevents the game from showing you purchase/premium prompts"},
+    {name = "showprompts", desc = "Allows the game to show purchase/premium prompts again"},
+    {name = "enable [inventory/playerlist/chat/reset/emotes/all]", desc = "Toggles visibility of coregui items"},
+    {name = "disable [inventory/playerlist/chat/reset/emotes/all]", desc = "Toggles visibility of coregui items"},
+    {name = "showguis", desc = "Shows any invisible GUIs"},
+    {name = "unshowguis", desc = "Undoes showguis"},
+    {name = "hideguis", desc = "Hides any GUIs in PlayerGui"},
+    {name = "unhideguis", desc = "Undoes hideguis"},
+    {name = "guidelete", desc = "Enables backspace to delete GUI"},
+    {name = "unguidelete / noguidelete", desc = "Disables guidelete"},
+    {name = "hideiy", desc = "Hides the main IY GUI"},
+    {name = "showiy / unhideiy", desc = "Shows IY again"},
+    {name = "keepiy", desc = "Auto execute IY when you teleport through servers"},
+    {name = "unkeepiy", desc = "Disable keepiy"},
+    {name = "togglekeepiy", desc = "Toggle keepiy"},
+    {name = "savegame / saveplace", desc = "Uses saveinstance to save the game"},
+    {name = "clearerror", desc = "Clears the annoying box and blur when a game kicks you"},
+    {name = "clientantikick / antikick (CLIENT)", desc = "Prevents localscripts from kicking you"},
+    {name = "clientantiteleport / antiteleport (CLIENT)", desc = "Prevents localscripts from teleporting you"},
+    {name = "allowrejoin / allowrj [true/false] (CLIENT)", desc = "Changes if antiteleport allows you to rejoin or not"},
+    {name = "cancelteleport / canceltp", desc = "Cancels teleports in progress"},
+    {name = "volume / vol [0-10]", desc = "Adjusts your game volume on a scale of 0 to 10"},
+    {name = "antilag / boostfps / lowgraphics", desc = "Lowers game quality to boost FPS"},
+    {name = "record / rec", desc = "Starts roblox recorder"},
+    {name = "screenshot / scrnshot", desc = "Takes a screenshot"},
+    {name = "togglefullscreen / togglefs", desc = "Toggles fullscreen"},
+    {name = "notify [text]", desc = "Sends you a notification with the provided text"},
+    {name = "lastcommand / lastcmd", desc = "Executes the previous command used"},
+    {name = "exit", desc = "Kills roblox process"},
+    {name = "noclip", desc = "Go through objects"},
+    {name = "unnoclip / clip", desc = "Disables noclip"},
+    {name = "fly [speed]", desc = "Makes you fly"},
+    {name = "unfly", desc = "Disables fly"},
+    {name = "flyspeed [num]", desc = "Set fly speed (default is 20)"},
+    {name = "vehiclefly / vfly [speed]", desc = "Makes you fly in a vehicle"},
+    {name = "unvehiclefly / unvfly", desc = "Disables vehicle fly"},
+    {name = "vehicleflyspeed  / vflyspeed [num]", desc = "Set vehicle fly speed"},
+    {name = "cframefly / cfly [speed]", desc = "Makes you fly, bypassing some anti cheats (works on mobile)"},
+    {name = "uncframefly / uncfly", desc = "Disables cfly"},
+    {name = "cframeflyspeed  / cflyspeed [num]", desc = "Sets cfly speed"},
+    {name = "qefly [true / false]", desc = "enables or disables the Q and E hotkeys for fly"},
+    {name = "vehiclenoclip / vnoclip", desc = "Turns off vehicle collision"},
+    {name = "vehicleclip / vclip / unvnoclip", desc = "Enables vehicle collision"},
+    {name = "float /  platform", desc = "Spawns a platform beneath you causing you to float"},
+    {name = "unfloat / noplatform", desc = "Removes the platform"},
+    {name = "swim", desc = "Allows you to swim in the air"},
+    {name = "unswim / noswim", desc = "Stops you from swimming everywhere"},
+    {name = "setwaypoint / swp [name]", desc = "Sets a waypoint at your position"},
+    {name = "waypointpos / wpp [name] [X Y Z]", desc = "Sets a waypoint with specified coordinates"},
+    {name = "waypoints", desc = "Shows a list of currently active waypoints"},
+    {name = "showwaypoints / showwp", desc = "Shows all currently set waypoints"},
+    {name = "hidewaypoints / hidewp", desc = "Hides shown waypoints"},
+    {name = "waypoint / wp [name]", desc = "Teleports player to a waypoint"},
+    {name = "tweenwaypoint / twp [name]", desc = "Tweens player to a waypoint"},
+    {name = "walktowaypoint / wtwp [name]", desc = "Walks player to a waypoint"},
+    {name = "deletewaypoint / dwp [name]", desc = "Deletes a waypoint"},
+    {name = "clearwaypoints / cwp", desc = "Clears all waypoints"},
+    {name = "cleargamewaypoints / cgamewp", desc = "Clears all waypoints for the game you are in"},
+    {name = "goto [player]", desc = "Go to a player"},
+    {name = "tweengoto / tgoto [player]", desc = "Tween to a player (bypasses some anti cheats)"},
+    {name = "tweenspeed / tspeed [num]", desc = "Sets how fast all tween commands go (default is 1)"},
+    {name = "vehiclegoto / vgoto [player]", desc = "Go to a player while in a vehicle"},
+    {name = "loopgoto [player] [distance] [delay]", desc = "Loop teleport to a player"},
+    {name = "unloopgoto", desc = "Stops teleporting you to a player"},
+    {name = "pulsetp / ptp [player] [seconds]", desc = "Teleports you to a player for a specified ammount of time"},
+    {name = "clientbring / cbring [player] (CLIENT)", desc = "Bring a player"},
+    {name = "loopbring [player] [distance] [delay] (CLIENT)", desc = "Loop brings a player to you (useful for killing)"},
+    {name = "unloopbring [player]", desc = "Undoes loopbring"},
+    {name = "freeze / fr [player] (CLIENT)", desc = "Freezes a player"},
+    {name = "freezeanims", desc = "Freezes your animations / pauses your animations - Does not work on default animations"},
+    {name = "unfreezeanims", desc = "Unfreezes your animations / plays your animations"},
+    {name = "thaw / unfr [player] (CLIENT)", desc = "Unfreezes a player"},
+    {name = "tpposition / tppos [X Y Z]", desc = "Teleports you to certain coordinates"},
+    {name = "tweentpposition / ttppos [X Y Z]", desc = "Tween to coordinates (bypasses some anti cheats)"},
+    {name = "offset [X Y Z]", desc = "Offsets you by certain coordinates"},
+    {name = "tweenoffset / toffset [X Y Z]", desc = "Tween offset (bypasses some anti cheats)"},
+    {name = "notifyposition / notifypos [player]", desc = "Notifies you the coordinates of a character"},
+    {name = "copyposition / copypos [player]", desc = "Copies the coordinates of a character to your clipboard"},
+    {name = "walktoposition / walktopos [X Y Z]", desc = "Makes you walk to a coordinate"},
+    {name = "spawnpoint / spawn [delay]", desc = "Sets a position where you will spawn"},
+    {name = "nospawnpoint / nospawn", desc = "Removes your custom spawn point"},
+    {name = "flashback / diedtp", desc = "Teleports you to where you last died"},
+    {name = "walltp", desc = "Teleports you above/over any wall you run into"},
+    {name = "nowalltp / unwalltp", desc = "Disables walltp"},
+    {name = "teleporttool / tptool", desc = "Gives you a teleport tool"},
+    {name = "logs", desc = "Opens the logs GUI"},
+    {name = "chatlogs / clogs", desc = "Log what people say or whisper"},
+    {name = "joinlogs / jlogs", desc = "Log when people join"},
+    {name = "chatlogswebhook / logswebhook [url]", desc = "Set a discord webhook for chatlogs to go to (provide no url to disable this)"},
+    {name = "antichatlogs / antichatlogger", desc = "Prevents Roblox from banning you for your silly chat messages (game needs the legacy chat)"},
+    {name = "chat / say [text]", desc = "Makes you chat a string (possible mute bypass)"},
+    {name = "spam [text]", desc = "Makes you spam the chat"},
+    {name = "unspam", desc = "Turns off spam"},
+    {name = "whisper / pm [player] [text]", desc = "Makes you whisper a string to someone (possible mute bypass)"},
+    {name = "pmspam [player] [text]", desc = "Makes you spam a players whispers"},
+    {name = "unpmspam [player]", desc = "Turns off pm spam"},
+    {name = "spamspeed [num]", desc = "How quickly you spam (default is 1)"},
+    {name = "bubblechat (CLIENT)", desc = "Enables bubble chat for your client"},
+    {name = "unbubblechat / nobubblechat", desc = "Disables the bubblechat command"},
+    {name = "safechat", desc = "Enables safe chat"},
+    {name = "nosafechat / disablesafechat", desc = "Disables safechat"},
+    {name = "esp", desc = "View all players and their status"},
+    {name = "noesp / unesp", desc = "Removes esp"},
+    {name = "esptransparency [number]", desc = "Changes the transparency of esp related commands"},
+    {name = "partesp [part name]", desc = "Highlights a part"},
+    {name = "unpartesp / nopartesp [part name]", desc = "removes partesp"},
+    {name = "chams", desc = "ESP but without text in the way"},
+    {name = "nochams / unchams", desc = "Removes chams"},
+    {name = "locate [player]", desc = "View a single player and their status"},
+    {name = "unlocate / nolocate [player]", desc = "Removes locate"},
+    {name = "xray", desc = "Makes all parts in workspace transparent"},
+    {name = "unxray / noxray", desc = "Restores transparency"},
+    {name = "loopxray", desc = "Makes all parts in workspace transparent but looped"},
+    {name = "unloopunxray", desc = "Unloops xray"},
+    {name = "spectate / view [player]", desc = "View a player"},
+    {name = "viewpart / viewp [part name]", desc = "View a part"},
+    {name = "unspectate / unview", desc = "Stops viewing player"},
+    {name = "freecam / fc", desc = "Allows you to freely move camera around the game"},
+    {name = "freecampos / fcpos [X Y Z]", desc = "Moves / opens freecam in a certain position"},
+    {name = "freecamwaypoint / fcwp [name]", desc = "Moves / opens freecam to a waypoint"},
+    {name = "freecamgoto / fcgoto / fctp [player]", desc = "Moves / opens freecam to a player"},
+    {name = "unfreecam / unfc", desc = "Disables freecam"},
+    {name = "freecamspeed / fcspeed [num]", desc = "Adjusts freecam speed (default is 1)"},
+    {name = "notifyfreecamposition / notifyfcpos", desc = "Noitifies you your freecam coordinates"},
+    {name = "copyfreecamposition / copyfcpos", desc = "Copies your freecam coordinates to your clipboard"},
+    {name = "gotocamera / gotocam", desc = "Teleports you to the location of your camera"},
+    {name = "tweengotocam / tgotocam", desc = "Tweens you to the location of your camera"},
+    {name = "firstp", desc = "Forces camera to go into first person"},
+    {name = "thirdp", desc = "Allows camera to go into third person"},
+    {name = "noclipcam / nccam", desc = "Allows camera to go through objects like walls"},
+    {name = "maxzoom [num]", desc = "Maximum camera zoom"},
+    {name = "minzoom [num]", desc = "Minimum camera zoom"},
+    {name = "camdistance [num]", desc = "Changes camera distance from your player"},
+    {name = "fov [num]", desc = "Adjusts field of view (default is 70)"},
+    {name = "fixcam / restorecam", desc = "Fixes camera"},
+    {name = "enableshiftlock / enablesl", desc = "Enables the shift lock option"},
+    {name = "lookat [player]", desc = "Moves your camera view to a player"},
+    {name = "btools (CLIENT)", desc = "Gives you building tools (DOES NOT REPLICATE)"},
+    {name = "f3x (CLIENT)", desc = "Gives you F3X building tools (DOES NOT REPLICATE)"},
+    {name = "partname / partpath", desc = "Allows you to click a part to see its path & name"},
+    {name = "delete [instance name] (CLIENT)", desc = "Removes any part with a certain name from the workspace (DOES NOT REPLICATE)"},
+    {name = "deleteclass / dc [class name] (CLIENT)", desc = "Removes any part with a certain classname from the workspace (DOES NOT REPLICATE)"},
+    {name = "lockworkspace / lockws", desc = "Locks the whole workspace"},
+    {name = "unlockworkspace / unlockws", desc = "Unlocks the whole workspace"},
+    {name = "invisibleparts / invisparts (CLIENT)", desc = "Shows invisible parts"},
+    {name = "uninvisibleparts / uninvisparts (CLIENT)", desc = "Makes parts affected by invisparts return to normal"},
+    {name = "deleteinvisparts / dip (CLIENT)", desc = "Deletes invisible parts"},
+    {name = "gotopart [part name]", desc = "Moves your character to a part or multiple parts"},
+    {name = "tweengotopart / tgotopart [part name]", desc = "Tweens your character to a part or multiple parts"},
+    {name = "gotopartclass / gpc [class name]", desc = "Moves your character to a part or multiple parts based on classname"},
+    {name = "tweengotopartclass / tgpc [class name]", desc = "Tweens your character to a part or multiple parts based on classname"},
+    {name = "gotomodel [part name]", desc = "Moves your character to a model or multiple models"},
+    {name = "tweengotomodel / tgotomodel [part name]", desc = "Tweens your character to a model or multiple models"},
+    {name = "gotopartdelay / gotomodeldelay [num]", desc = "Adjusts how quickly you teleport to each part (default is 0.1)"},
+    {name = "bringpart [part name] (CLIENT)", desc = "Moves a part or multiple parts to your character"},
+    {name = "bringpartclass / bpc [class name] (CLIENT)", desc = "Moves a part or multiple parts to your character based on classname"},
+    {name = "noclickdetectorlimits / nocdlimits", desc = "Sets all click detectors MaxActivationDistance to math.huge"},
+    {name = "fireclickdetectors / firecd [name]", desc = "Uses all click detectors in a game or uses the optional name"},
+    {name = "firetouchinterests / touchinterests [name]", desc = "Uses all touchinterests in a game or uses the optional name"},
+    {name = "noproximitypromptlimits / nopplimits", desc = "Sets all proximity prompts MaxActivationDistance to math.huge"},
+    {name = "fireproximityprompts / firepp [name]", desc = "Uses all proximity prompts in a game or uses the optional name"},
+    {name = "instantproximityprompts / instantpp", desc = "Disable the cooldown for proximity prompts"},
+    {name = "uninstantproximityprompts / uninstantpp", desc = "Undo the cooldown removal"},
+    {name = "tpunanchored / tpua [player]", desc = "Teleports unanchored parts to a player"},
+    {name = "animsunanchored / freezeua", desc = "Freezes unanchored parts"},
+    {name = "thawunanchored / thawua / unfreezeua", desc = "Thaws unanchored parts"},
+    {name = "removeterrain / rterrain / noterrain", desc = "Removes all terrain"},
+    {name = "clearnilinstances / nonilinstances / cni", desc = "Removes nil instances"},
+    {name = "destroyheight / dh [num]", desc = "Sets FallenPartsDestroyHeight"},
+    {name = "fakeout", desc = "Tp to the void and then back (useful to kill people attached to you)"},
+    {name = "antivoid", desc = "Prevents you from falling into the void by launching you upwards"},
+    {name = "unantivoid / noantivoid", desc = "Disables antivoid"},
+    {name = "fullbright / fb (CLIENT)", desc = "Makes the map brighter / more visible"},
+    {name = "loopfullbright / loopfb (CLIENT)", desc = "Makes the map brighter / more visible but looped"},
+    {name = "unloopfullbright / unloopfb", desc = "Unloops fullbright"},
+    {name = "ambient [num] [num] [num] (CLIENT)", desc = "Changes ambient"},
+    {name = "day (CLIENT)", desc = "Changes the time to day for the client"},
+    {name = "night (CLIENT)", desc = "Changes the time to night for the client"},
+    {name = "nofog (CLIENT)", desc = "Removes fog"},
+    {name = "brightness [num] (CLIENT)", desc = "Changes the brightness lighting property"},
+    {name = "globalshadows / gshadows (CLIENT)", desc = "Enables global shadows"},
+    {name = "noglobalshadows / nogshadows (CLIENT)", desc = "Disables global shadows"},
+    {name = "restorelighting / rlighting", desc = "Restores Lighting properties"},
+    {name = "light [radius] [brightness] (CLIENT)", desc = "Gives your player dynamic light"},
+    {name = "nolight / unlight", desc = "Removes dynamic light from your player"},
+    {name = "inspect / examine [player]", desc = "Opens InspectMenu for a certain player"},
+    {name = "age [player]", desc = "Tells you the age of a player"},
+    {name = "chatage [player]", desc = "Chats the age of a player"},
+    {name = "joindate / jd [player]", desc = "Tells you the date the player joined Roblox"},
+    {name = "chatjoindate / cjd [player]", desc = "Chats the date the player joined Roblox"},
+    {name = "copyname / copyuser [player]", desc = "Copies a players full username to your clipboard"},
+    {name = "userid / id [player]", desc = "Notifies a players user ID"},
+    {name = "copyuserid / copyid [player]", desc = "Copies a players user ID to your clipboard"},
+    {name = "appearanceid / aid [player]", desc = "Notifies a players appearance ID"},
+    {name = "copyappearanceid / caid [player]", desc = "Copies a players appearance ID to your clipboard"},
+    {name = "bang [player] [speed]", desc = "owo"},
+    {name = "unbang", desc = "uwu"},
+    {name = "carpet [player]", desc = "Be someones carpet"},
+    {name = "uncarpet", desc = "Undoes carpet"},
+    {name = "friend [player]", desc = "Sends a friend request to certain players"},
+    {name = "unfriend [player]", desc = "Unfriends certain players"},
+    {name = "headsit [player]", desc = "Sit on a players head"},
+    {name = "walkto / follow [player]", desc = "Follow a player"},
+    {name = "pathfindwalkto / pathfindfollow [player]", desc = "Follow a player using pathfinding"},
+    {name = "pathfindwalktowaypoint / pathfindwalktowp [waypoint]", desc = "Walk to a waypoint using pathfinding"},
+    {name = "unwalkto / unfollow", desc = "Stops following a player"},
+    {name = "orbit [player] [speed] [distance]", desc = "Makes your character orbit around a player with an optional speed and an optional distance"},
+    {name = "unorbit", desc = "Disables orbit"},
+    {name = "stareat / stare [player]", desc = "Stare / look at a player"},
+    {name = "unstareat / unstare [player]", desc = "Disables stareat"},
+    {name = "rolewatch [group id] [role name]", desc = "Notify if someone from a watched group joins the server"},
+    {name = "rolewatchstop / unrolewatch", desc = "Disable Rolewatch"},
+    {name = "rolewatchleave", desc = "Toggle if you should leave the game if someone from a watched group joins the server"},
+    {name = "staffwatch", desc = "Notify if a staff member of the game joins the server"},
+    {name = "unstaffwatch", desc = "Disable Staffwatch"},
+    {name = "attach [player] (TOOL)", desc = "Attaches you to a player (YOU NEED A TOOL)"},
+    {name = "kill [player] (TOOL)", desc = "Kills a player (YOU NEED A TOOL)"},
+    {name = "fastkill [player] (TOOL)", desc = "Kills a player (less reliable) (YOU NEED A TOOL)"},
+    {name = "handlekill / hkill [player] (TOOL)", desc = "Kills a player using tool damage (YOU NEED A TOOL)"},
+    {name = "bring [player] (TOOL)", desc = "Brings a player (YOU NEED A TOOL)"},
+    {name = "fastbring [player] (TOOL)", desc = "Brings a player (less reliable) (YOU NEED A TOOL)"},
+    {name = "teleport / tp [player] [player] (TOOL)", desc = "Teleports a player to another player (YOU NEED A TOOL)"},
+    {name = "fastteleport / fasttp [player] [player] (TOOL)", desc = "Teleports a player to another player (less reliable) (YOU NEED A TOOL)"},
+    {name = "fling", desc = "Flings anyone you touch"},
+    {name = "unfling", desc = "Disables the fling command"},
+    {name = "flyfling [speed]", desc = "Basically the invisfling command but not invisible"},
+    {name = "unflyfling", desc = "Disables the flyfling command"},
+    {name = "walkfling", desc = "Basically fling but no spinning"},
+    {name = "unwalkfling / nowalkfling", desc = "Disables walkfling"},
+    {name = "invisfling", desc = "Enables invisible fling"},
+    {name = "antifling", desc = "Disables player collisions to prevent you from being flung"},
+    {name = "unantifling", desc = "Disables antifling"},
+    {name = "loopoof", desc = "Loops everyones character sounds (everyone can hear)"},
+    {name = "unloopoof", desc = "Stops the oof chaos"},
+    {name = "muteboombox [player]", desc = "Mutes someones boombox"},
+    {name = "unmuteboombox [player]", desc = "Unmutes someones boombox"},
+    {name = "hitbox [player] [size] [transparency]", desc = "Expands the hitbox for players HumanoidRootPart (default is 1)"},
+    {name = "headsize [player] [size]", desc = "Expands the head size for players Head (default is 1)"},
+    {name = "reset", desc = "Resets your character normally"},
+    {name = "respawn", desc = "Respawns you"},
+    {name = "refresh / re", desc = "Respawns and brings you back to the same position"},
+    {name = "god", desc = "Makes your character difficult to kill in most games"},
+    {name = "invisible / invis", desc = "Makes you invisible to other players"},
+    {name = "visible / vis", desc = "Makes you visible to other players"},
+    {name = "toolinvisible / toolinvis / tinvis", desc = "Makes you invisible to other players and able to use tools"},
+    {name = "speed / ws / walkspeed [num]", desc = "Change your walkspeed"},
+    {name = "spoofspeed / spoofws [num]", desc = "Spoofs your WalkSpeed on the Client"},
+    {name = "loopspeed / loopws [num]", desc = "Loops your walkspeed"},
+    {name = "unloopspeed / unloopws", desc = "Turns off loopspeed"},
+    {name = "hipheight / hheight [num]", desc = "Adjusts hip height"},
+    {name = "jumppower / jpower / jp [num]", desc = "Change a players jump height"},
+    {name = "spoofjumppower / spoofjp [num]", desc = "Spoofs your JumpPower on the Client"},
+    {name = "loopjumppower / loopjp [num]", desc = "Loops your jump height"},
+    {name = "unloopjumppower / unloopjp", desc = "Turns off loopjumppower"},
+    {name = "maxslopeangle / msa [num]", desc = "Adjusts MaxSlopeAngle"},
+    {name = "gravity / grav [num] (CLIENT)", desc = "Change your gravity"},
+    {name = "sit", desc = "Makes your character sit"},
+    {name = "lay / laydown", desc = "Makes your character lay down"},
+    {name = "sitwalk", desc = "Makes your character sit while still being able to walk"},
+    {name = "nosit", desc = "Prevents your character from sitting"},
+    {name = "unnosit", desc = "Disables nosit"},
+    {name = "jump", desc = "Makes your character jump"},
+    {name = "infinitejump / infjump", desc = "Allows you to jump before hitting the ground"},
+    {name = "uninfinitejump / uninfjump", desc = "Disables infjump"},
+    {name = "flyjump", desc = "Allows you to hold space to fly up"},
+    {name = "unflyjump", desc = "Disables flyjump"},
+    {name = "autojump / ajump", desc = "Automatically jumps when you run into an object"},
+    {name = "unautojump / unajump", desc = "Disables autojump"},
+    {name = "edgejump / ejump", desc = "Automatically jumps when you get to the edge of an object"},
+    {name = "unedgejump / unejump", desc = "Disables edgejump"},
+    {name = "platformstand / stun", desc = "Enables PlatformStand"},
+    {name = "unplatformstand / unstun", desc = "Disables PlatformStand"},
+    {name = "norotate / noautorotate", desc = "Disables AutoRotate"},
+    {name = "unnorotate / autorotate", desc = "Enables AutoRotate"},
+    {name = "enablestate [StateType]", desc = "Enables a humanoid state type"},
+    {name = "disablestate [StateType]", desc = "Disables a humanoid state type"},
+    {name = "team [team name] (CLIENT)", desc = "Changes your team. Sometimes fools localscripts."},
+    {name = "nobillboardgui / nobgui / noname", desc = "Removes billboard and surface guis from your players (i.e. name guis at cafes)"},
+    {name = "loopnobgui / loopnoname", desc = "Loop removes billboard and surface guis from your players (i.e. name guis at cafes)"},
+    {name = "unloopnobgui / unloopnoname", desc = "Disables loopnobgui"},
+    {name = "noarms", desc = "Removes your arms"},
+    {name = "nolegs", desc = "Removes your legs"},
+    {name = "nolimbs", desc = "Removes your limbs"},
+    {name = "naked (CLIENT)", desc = "Removes your clothing"},
+    {name = "noface / removeface", desc = "Removes your face"},
+    {name = "blockhead", desc = "Turns your head into a block"},
+    {name = "blockhats", desc = "Turns your hats into blocks"},
+    {name = "blocktool", desc = "Turns the currently selected tool into a block"},
+    {name = "creeper", desc = "Makes you look like a creeper"},
+    {name = "drophats", desc = "Drops your hats"},
+    {name = "nohats / deletehats / rhats", desc = "Deletes your hats"},
+    {name = "hatspin / spinhats", desc = "Spins your characters accessories"},
+    {name = "unhatspin / unspinhats", desc = "Undoes spinhats"},
+    {name = "clearhats / cleanhats", desc = "Clears hats in the workspace"},
+    {name = "chardelete / cd [instance name]", desc = "Removes any part with a certain name from your character"},
+    {name = "chardeleteclass / cdc [class name]", desc = "Removes any part with a certain classname from your character"},
+    {name = "deletevelocity / dv / removeforces", desc = "Removes any velocity / force instances in your character"},
+    {name = "weaken [num]", desc = "Makes your character less dense"},
+    {name = "unweaken", desc = "Sets your characters CustomPhysicalProperties to default"},
+    {name = "strengthen [num]", desc = "Makes your character more dense (CustomPhysicalProperties)"},
+    {name = "unstrengthen", desc = "Sets your characters CustomPhysicalProperties to default"},
+    {name = "breakvelocity", desc = "Sets your characters velocity to 0"},
+    {name = "spin [speed]", desc = "Spins your character"},
+    {name = "unspin", desc = "Disables spin"},
+    {name = "split", desc = "Splits your character in half"},
+    {name = "nilchar", desc = "Sets your characters parent to nil"},
+    {name = "unnilchar / nonilchar", desc = "Sets your characters parent to workspace"},
+    {name = "noroot / removeroot / rroot", desc = "Removes your characters HumanoidRootPart"},
+    {name = "replaceroot", desc = "Replaces your characters HumanoidRootPart"},
+    {name = "clearcharappearance / clearchar / clrchar", desc = "Removes all accessory, shirt, pants, charactermesh, and bodycolors"},
+    {name = "animation / anim [ID] [speed]", desc = "Makes your character perform an animation (must be by roblox to replicate)"},
+    {name = "dance", desc = "Makes you  d a n c e"},
+    {name = "undance", desc = "Stops dance animations"},
+    {name = "spasm", desc = "Makes you  c r a z y"},
+    {name = "unspasm", desc = "Stops spasm"},
+    {name = "headthrow", desc = "Simply makes you throw your head"},
+    {name = "noanim", desc = "Disables your animations"},
+    {name = "reanim", desc = "Restores your animations"},
+    {name = "animspeed [num]", desc = "Changes the speed of your current animation"},
+    {name = "copyanimation / copyanim / copyemote [player]", desc = "Copies someone elses animation"},
+    {name = "copyanimationid / copyanimid / copyemoteid [player]", desc = "Copies your animation id or someone elses to your clipboard"},
+    {name = "loopanimation / loopanim", desc = "Loops your current animation"},
+    {name = "stopanimations / stopanims", desc = "Stops running animations"},
+    {name = "refreshanimations / refreshanims", desc = "Refreshes animations"},
+    {name = "allowcustomanim / allowcustomanimations", desc = "Lets you use custom animation packs instead"},
+    {name = "unallowcustomanim / unallowcustomanimations", desc = "Doesn\\"},
+    {name = "autoclick [click delay] [release delay]", desc = "Automatically clicks your mouse with a set delay"},
+    {name = "unautoclick / noautoclick", desc = "Turns off autoclick"},
+    {name = "autokeypress [key] [down delay] [up delay]", desc = "Automatically presses a key with a set delay"},
+    {name = "unautokeypress", desc = "Stops autokeypress"},
+    {name = "hovername", desc = "Shows a players username when your mouse is hovered over them"},
+    {name = "unhovername / nohovername", desc = "Turns off hovername"},
+    {name = "mousesensitivity / ms [0-10]", desc = "Sets your mouse sensitivity (affects first person and right click drag) (default is 1)"},
+    {name = "clickdelete", desc = "Go to settings>Keybinds>Add for clicktp"},
+    {name = "clickteleport", desc = "Go to settings>Keybinds>Add for click tp"},
+    {name = "mouseteleport / mousetp", desc = "Teleports your character to your mouse. This is recommended as a keybind"},
+    {name = "tools", desc = "Copies tools from ReplicatedStorage and Lighting"},
+    {name = "notools / removetools / deletetools", desc = "Removes tools from character and backpack"},
+    {name = "deleteselectedtool / dst", desc = "Removes any currently selected tools"},
+    {name = "grabtools", desc = "Automatically get tools that are dropped"},
+    {name = "ungrabtools / nograbtools", desc = "Disables grabtools"},
+    {name = "copytools [player] (CLIENT)", desc = "Copies a players tools"},
+    {name = "dupetools / clonetools [num]", desc = "Duplicates your inventory tools a set ammount of times"},
+    {name = "givetool / givetools", desc = "Gives all the tools you\\"},
+    {name = "droptools", desc = "Drops your tools"},
+    {name = "droppabletools", desc = "Makes your tools droppable"},
+    {name = "equiptools", desc = "Equips every tool in your inventory at once"},
+    {name = "unequiptools", desc = "Unequips every tool you are currently holding at once"},
+    {name = "removespecifictool [name]", desc = "Automatically remove a specific tool from your inventory"},
+    {name = "unremovespecifictool [name]", desc = "Stops removing a specific tool from your inventory"},
+    {name = "clearremovespecifictool", desc = "Stop removing all specific tools from your inventory"},
+    {name = "reach [num]", desc = "Increases the hitbox of your held tool"},
+    {name = "boxreach [num]", desc = "Increases the hitbox of your held tool in a box shape"},
+    {name = "unreach / noreach", desc = "Turns off reach"},
+    {name = "grippos [X Y Z]", desc = "Changes your current tools grip position"},
+    {name = "usetools [ammount] [delay]", desc = "Activates all tools in your backpack at the same time"},
+    {name = "addalias [cmd] [alias]", desc = "Adds an alias to a command"},
+    {name = "removealias [alias]", desc = "Removes a custom alias"},
+    {name = "clraliases", desc = "Removes all custom aliases"},
+    {name = "addplugin / plugin [name]", desc = "Add a plugin via command"},
+    {name = "removeplugin / deleteplugin [name]", desc = "Remove a plugin via command"},
+    {name = "reloadplugin [name]", desc = "Reloads a plugin"},
+    {name = "addallplugins / loadallplugins", desc = "Adds all available plugins from the workspace folder"},
+    {name = "breakloops / break (cmd loops)", desc = "Stops any cmd loops (;100^1^cmd)"},
+    {name = "removecmd / deletecmd", desc = "Removes a command until the admin is reloaded"},
+    {name = "tpwalk / teleportwalk [num]", desc = "Teleports you to your move direction"},
+    {name = "untpwalk / unteleportwalk", desc = "Undoes tpwalk / teleportwalk"},
+    {name = "notifyping / ping", desc = "Notify yourself your ping"},
+    {name = "trip", desc = "Makes your character fall over"},
+    {name = "norender", desc = "Disable 3d Rendering to decrease the amount of CPU the client uses"},
+    {name = "render", desc = "Enable 3d Rendering"},
+    {name = "use2022materials / 2022materials", desc = "Enables 2022 material textures"},
+    {name = "unuse2022materials / un2022materials", desc = "Disables 2022 material textures"},
+    {name = "promptr6", desc = "Prompts the game to switch your rig type to R6"},
+    {name = "promptr15", desc = "Prompts the game to switch your rig type to R15"},
+    {name = "wallwalk / walkonwalls", desc = "Walk on walls"},
+    {name = "removeads / adblock", desc = "Automatically removes ad billboards"},
+    {name = "scare / spook [player]", desc = "Teleports in front of a player for half a second"},
+ }
+
+_G.BITWISE_ADMIN = _G.BITWISE_ADMIN or {commandToggles = {}, fly = false, noclip = false, clickTP = false, clickDelete = false}
+if type(_G.BITWISE_ADMIN.commandToggles) ~= "table" then _G.BITWISE_ADMIN.commandToggles = {} end
+
+function BITWISE_ADMIN_SAVE_STATE()
+    pcall(function()
+        if writefile then writefile("PARADOX_HAX_admin_toggles.json", HttpService:JSONEncode(_G.BITWISE_ADMIN.commandToggles)) end
+    end)
+end
+
+function BITWISE_ADMIN_LOAD_STATE()
+    pcall(function()
+        if readfile and isfile and isfile("PARADOX_HAX_admin_toggles.json") then
+            local saved = HttpService:JSONDecode(readfile("PARADOX_HAX_admin_toggles.json"))
+            if type(saved) == "table" then _G.BITWISE_ADMIN.commandToggles = saved end
+        end
+    end)
+end
+BITWISE_ADMIN_LOAD_STATE()
+
+function BITWISE_ADMIN_ROOT()
+    local char = player and player.Character
+    return char and char:FindFirstChild("HumanoidRootPart"), char and char:FindFirstChildOfClass("Humanoid")
+end
+
+function BITWISE_ADMIN_NOTIFY(title, text, duration)
+    showNotification("Admin • " .. tostring(title), tostring(text), duration or 3)
+end
+
+function BITWISE_ADMIN_SET_NOCLIP(enabled)
+    _G.BITWISE_ADMIN.noclip = enabled == true
+    local char = player and player.Character
+    if char then for _, part in ipairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = not enabled end end end
+end
+
+function BITWISE_ADMIN_TOGGLE_FLY(enabled)
+    local state = _G.BITWISE_ADMIN
+    if state.flyConnection then state.flyConnection:Disconnect(); state.flyConnection = nil end
+    state.fly = enabled == true
+    local root, hum = BITWISE_ADMIN_ROOT()
+    if not enabled then
+        if root then root.AssemblyLinearVelocity = Vector3.zero end
+        if hum then hum.PlatformStand = false end
+        return
+    end
+    if not root or not hum then state.fly = false; BITWISE_ADMIN_NOTIFY("Fly", "Character belum siap", 3); return end
+    hum.PlatformStand = true
+    state.flyConnection = RunService.RenderStepped:Connect(function(dt)
+        if not state.fly then return end
+        local currentRoot, currentHum = BITWISE_ADMIN_ROOT(); local camera = Workspace.CurrentCamera
+        if not currentRoot or not currentHum or not camera then BITWISE_ADMIN_TOGGLE_FLY(false); return end
+        local direction = Vector3.zero
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then direction = direction + camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then direction = direction - camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then direction = direction + camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then direction = direction - camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then direction = direction + Vector3.new(0,1,0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then direction = direction - Vector3.new(0,1,0) end
+        if direction.Magnitude > 0 then direction = direction.Unit * 65 end
+        currentRoot.AssemblyLinearVelocity = Vector3.zero
+        currentRoot.CFrame = currentRoot.CFrame + direction * math.min(dt, 0.1)
+    end)
+end
+
+function BITWISE_ADMIN_DISPATCH(command, enabled)
+    local state = _G.BITWISE_ADMIN
+    local base = tostring(command or ""):match("^[^ /]+") or tostring(command or "")
+    base = base:lower()
+    local handled = true
+    if base == "fly" or base == "cfly" then
+        BITWISE_ADMIN_TOGGLE_FLY(enabled)
+    elseif base == "unfly" or base == "uncfly" then
+        BITWISE_ADMIN_TOGGLE_FLY(not enabled)
+    elseif base == "noclip" or base == "vnoclip" then
+        BITWISE_ADMIN_SET_NOCLIP(enabled)
+    elseif base == "unnoclip" or base == "clip" or base == "vehicleclip" or base == "unvnoclip" then
+        BITWISE_ADMIN_SET_NOCLIP(not enabled)
+    elseif base == "antilag" or base == "boostfps" or base == "lowgraphics" then
+        if type(toggleFPSBoostMap) == "function" then toggleFPSBoostMap(enabled, false) else handled = false end
+    elseif base == "esp" or base == "chams" then
+        _G.BITWISE_ESP_Active = enabled
+    elseif base == "noesp" or base == "unesp" or base == "nochams" or base == "unchams" then
+        _G.BITWISE_ESP_Active = not enabled
+    elseif base == "notify" then
+        if enabled then BITWISE_ADMIN_NOTIFY("Command", "notify toggle aktif", 3) end
+    elseif base == "showwaypoints" or base == "hidewaypoints" or base == "showwp" or base == "hidewp" then
+        state.commandToggles[command] = enabled
+    else
+        -- Semua command tetap tersedia sebagai toggle dan tersimpan. Command yang
+        -- memerlukan argumen/player/server diberi status, bukan dijalankan palsu.
+        handled = false
+    end
+    state.commandToggles[command] = enabled == true
+    BITWISE_ADMIN_SAVE_STATE()
+    if handled then
+        BITWISE_ADMIN_NOTIFY(command, enabled and "ON" or "OFF", 2)
+    else
+        BITWISE_ADMIN_NOTIFY(command, "Toggle tersimpan; command ini memerlukan handler/argumen khusus.", 3)
+    end
+end
+
+function BITWISE_ADMIN_BUILD(VIPTab)
+    VIPTab:Section({Title = "Discord / Support / Help sampai Scare", Icon = "shield-check"})
+    VIPTab:Paragraph({Title = "Infinite Yield Feature Toggles", Icon = "list-checks", Desc = "399 fitur dari web /fitur-admin, mulai Discord sampai Scare. Semua tersedia sebagai toggle."})
+    for _, command in ipairs(BITWISE_ADMIN_COMMANDS) do
+        local commandName = command.name
+        VIPTab:Toggle({
+            Title = commandName,
+            Icon = "toggle-right",
+            Desc = command.desc,
+            Value = _G.BITWISE_ADMIN.commandToggles[commandName] == true,
+            Callback = function(value)
+                playClickSound()
+                BITWISE_ADMIN_DISPATCH(commandName, value == true)
+            end,
+        })
+    end
+end
+
 -- ========== MAIN UI ==========
 function createMainUI(reuseWindowObj)
     clickSoundReady = false
@@ -6777,6 +7300,7 @@ end)
     pcall(function()
         local VIPTab = MemoryTab
         if userLevel == "vip" then
+            BITWISE_ADMIN_BUILD(VIPTab)
             VIPTab:Section({ Title = "Path Visualizer", Icon = "route" })
             VIPTab:Toggle({
                 Title = "Path Record",
@@ -7034,14 +7558,28 @@ end)
         ChatTab:Section({ Title = "CONFIGS", Icon = "message-circle" })
         ChatTab:Paragraph({ Title = "GROUP CHAT", Icon = "users", Desc = "Chat bersama pengguna VIP" })
         chatOnlineParagraph = ChatTab:Paragraph({ Title = "STATUS", Icon = "radio", Desc = "0 online   TERHUBUNG" })
+        pcall(function()
+            local panel = chatOnlineParagraph.UIElements and chatOnlineParagraph.UIElements.Main
+            if panel then panel.BackgroundColor3 = Color3.fromRGB(10, 45, 38); panel.BackgroundTransparency = 0.05 end
+        end)
         chatMessageParagraph = ChatTab:Paragraph({
             Title = "Messages",
             Icon = "messages-square",
             Desc = "╭─ GROUP CHAT\n│ Belum ada pesan. Mulai percakapan.\n╰────────────────────"
         })
+        pcall(function()
+            local panel = chatMessageParagraph.UIElements and chatMessageParagraph.UIElements.Main
+            if panel then
+                panel.BackgroundColor3 = Color3.fromRGB(8, 18, 35)
+                panel.BackgroundTransparency = 0.04
+                local stroke = panel:FindFirstChildWhichIsA("UIStroke")
+                if stroke then stroke.Color = Color3.fromRGB(35, 145, 255); stroke.Thickness = 1.5; stroke.Transparency = 0.15 end
+            end
+        end)
         ChatTab:Button({
             Title = "Paste",
             Icon = "clipboard",
+            Color = "Blue",
             Callback = function()
                 local pasted = nil
                 pcall(function() if getclipboard then pasted = getclipboard() end end)
@@ -7056,6 +7594,7 @@ end)
         ChatTab:Button({
             Title = "Type",
             Icon = "keyboard",
+            Color = "Cyan",
             Callback = function() showNotification("Chat", "Ketik pesan pada kolom Pesan.", 2) end
         })
         ChatTab:Input({
@@ -7068,8 +7607,8 @@ end)
             end
         })
         chatComposerStatusParagraph = ChatTab:Paragraph({ Title = "", Desc = "0/500  •  Enter untuk kirim" })
-        ChatTab:Button({ Title = "Send", Icon = "send", Callback = function() playClickSound(); chatSend() end })
-        ChatTab:Button({ Title = "Refresh", Icon = "refresh-cw", Callback = function() playClickSound(); chatRefresh(false) end })
+        ChatTab:Button({ Title = "Send", Icon = "send", Color = "Green", Callback = function() playClickSound(); chatSend() end })
+        ChatTab:Button({ Title = "Refresh", Icon = "refresh-cw", Color = "Purple", Callback = function() playClickSound(); chatRefresh(false) end })
         task.spawn(function()
             while Window do task.wait(10); pcall(function() chatRefresh(true) end) end
         end)
