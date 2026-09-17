@@ -35,7 +35,7 @@ end
 --// - Hard remove grass dimatikan agar HP/Delta tidak spike/patah-patah.
 --// PATCHED: MOBILE FLOATING PLAY/STOP MULTI-TOUCH SAFE / ANTI ANALOG DRAG
 -- ========== KEY SYSTEM CONFIGURATION ==========
-local API_BASE_URL  = "https://vipdashboard-gljqgiat.manus.space"
+local API_BASE_URL  = "https://vippanel-f7vhvv93.manus.space"
 -- Panel MDW VIP production endpoint; jangan gunakan URL Replit/kingstrom lama.
 local FREE_KEY      = "FREE-ACCESS-2026"
 local SCRIPT_NAME   = "race"
@@ -49,7 +49,7 @@ local GUNUNG_API_URL = API_BASE_URL .. "/gunung_api.php?action=list"
 local PRIVATE_GUNUNG_API_URL = API_BASE_URL .. "/private_gunung_api.php"
 
 -- ========== LOAD WINDUI ==========
-local WindUI=nil do local __urls={"https://raw.githubusercontent.com/viptesxo/Newvip/refs/heads/main/main.lua","https://raw.githubusercontent.com/viptesxo/Modern-Ui-Library/refs/heads/main/main.lua"} local __last=nil for _,__u in ipairs(__urls) do local __s,__e=BITWISE_SAFE_HTTP_GET(__u) if __s then local __f,__le=BITWISE_SAFE_LOAD_CHUNK(__s,"WindUI") if __f then local __ok,__r=pcall(__f) if __ok and __r then WindUI=__r break else __last=__r end else __last=__le end else __last=__e end end if not WindUI then warn("[ONIUM] WindUI gagal dimuat: "..tostring(__last)) return end end
+local WindUI=nil do local __urls={"https://raw.githubusercontent.com/viptesxo/Newvip/refs/heads/main/main.lua","https://raw.githubusercontent.com/viptesxo/Modern-Ui-Library/refs/heads/main/main.lua"} local __last=nil for _,__u in ipairs(__urls) do local __s,__e=BITWISE_SAFE_HTTP_GET(__u) if __s then local __f,__le=BITWISE_SAFE_LOAD_CHUNK(__s,"WindUI") if __f then local __ok,__r=pcall(__f) if __ok and __r then WindUI=__r break else __last=__r end else __last=__le end else __last=__e end end if not WindUI then warn("[MDW] WindUI gagal dimuat: "..tostring(__last)) return end end
 
 -- ========== SERVICES ==========
 local Players           = game:GetService("Players")
@@ -1117,22 +1117,22 @@ end
 
 
 --// =====================================================
---// ONIUM JSON SUPPORT PATCH
---// Membuat PARADOX HAX bisa load JSON ONIUM mentah:
+--// MDW JSON SUPPORT PATCH
+--// Membuat PARADOX HAX bisa load JSON MDW mentah:
 --// position/times/rotation/city/walkSpeed/tool/states/jump/moveDirection
 --// =====================================================
-local ONIUM_AUTO_SPEED_FROM_CITY = true
-local ONIUM_EXACT_POSITION_PLAYBACK = false -- false = lebih smooth, true = lebih akurat tapi bisa patah-patah
-local ONIUM_RUNNING_USE_CITY_VELOCITY = true
-local ONIUM_MAX_AIR_HORIZONTAL_SPEED = 220
-local ONIUM_MAX_RUNNING_HORIZONTAL_SPEED = 220
-local ONIUM_MAX_Y_SPEED = 160
+local MDW_AUTO_SPEED_FROM_CITY = true
+local MDW_EXACT_POSITION_PLAYBACK = false -- false = lebih smooth, true = lebih akurat tapi bisa patah-patah
+local MDW_RUNNING_USE_CITY_VELOCITY = true
+local MDW_MAX_AIR_HORIZONTAL_SPEED = 220
+local MDW_MAX_RUNNING_HORIZONTAL_SPEED = 220
+local MDW_MAX_Y_SPEED = 160
 
-local function oniumToNumber(v, fallback)
+local function MDWToNumber(v, fallback)
     return safeNumber(v, fallback)
 end
 
-local function oniumVecFromAny(t)
+local function MDWVecFromAny(t)
     if typeof(t) == "Vector3" then
         return t
     end
@@ -1148,7 +1148,7 @@ local function oniumVecFromAny(t)
     )
 end
 
-local function oniumStateName(fd)
+local function MDWStateName(fd)
     local state = tostring(
         (fd and (fd.states or fd.state or fd.stateName or fd.humanoidState))
         or "Running"
@@ -1163,17 +1163,17 @@ local function oniumStateName(fd)
     return state
 end
 
-local function oniumIsFreefallState(state)
+local function MDWIsFreefallState(state)
     state = tostring(state or "")
     return state == "Freefall" or state == "FallingDown"
 end
 
-local function oniumIsJumpState(state)
+local function MDWIsJumpState(state)
     state = tostring(state or "")
     return state == "Jumping" or state == "Freefall" or state == "FallingDown"
 end
 
-local function oniumGetHorizontalSpeed(cityVec)
+local function MDWGetHorizontalSpeed(cityVec)
     if typeof(cityVec) ~= "Vector3" then
         return 0
     end
@@ -1181,13 +1181,13 @@ local function oniumGetHorizontalSpeed(cityVec)
     return safeMagnitude(Vector3.new(cityVec.X, 0, cityVec.Z))
 end
 
-local function oniumPickWalkSpeed(fd, cityVec)
+local function MDWPickWalkSpeed(fd, cityVec)
     local ws = tonumber(fd and (fd.walkSpeed or fd.ws or fd.speed or fd.originalWalkSpeed))
-    local hSpeed = oniumGetHorizontalSpeed(cityVec)
+    local hSpeed = MDWGetHorizontalSpeed(cityVec)
 
-    -- Kalau ONIUM JSON dari recorder masih menulis 16 tetapi city/momentum 50+,
+    -- Kalau MDW JSON dari recorder masih menulis 16 tetapi city/momentum 50+,
     -- pakai city sebagai base speed agar auto speed BitWise tidak ngaco.
-    if ONIUM_AUTO_SPEED_FROM_CITY then
+    if MDW_AUTO_SPEED_FROM_CITY then
         if (not ws or ws <= 0) and hSpeed > 1 then
             ws = hSpeed
         elseif ws and ws <= 20 and hSpeed > 25 then
@@ -1202,7 +1202,7 @@ local function oniumPickWalkSpeed(fd, cityVec)
     return clamp(round(ws, 1), MIN_PLAYBACK_SPEED, MAX_PLAYBACK_SPEED)
 end
 
-local function oniumCreateCFrame(fd, posX, posY, posZ)
+local function MDWCreateCFrame(fd, posX, posY, posZ)
     if fd and fd.cframe then
         local cf = fd.cframe
 
@@ -1212,18 +1212,18 @@ local function oniumCreateCFrame(fd, posX, posY, posZ)
 
         if type(cf) == "table" then
             return CFrame.new(
-                oniumToNumber(cf.x or cf.X or cf[1], posX),
-                oniumToNumber(cf.y or cf.Y or cf[2], posY),
-                oniumToNumber(cf.z or cf.Z or cf[3], posZ),
-                oniumToNumber(cf.r00 or cf[4], 1),
-                oniumToNumber(cf.r01 or cf[5], 0),
-                oniumToNumber(cf.r02 or cf[6], 0),
-                oniumToNumber(cf.r10 or cf[7], 0),
-                oniumToNumber(cf.r11 or cf[8], 1),
-                oniumToNumber(cf.r12 or cf[9], 0),
-                oniumToNumber(cf.r20 or cf[10], 0),
-                oniumToNumber(cf.r21 or cf[11], 0),
-                oniumToNumber(cf.r22 or cf[12], 1)
+                MDWToNumber(cf.x or cf.X or cf[1], posX),
+                MDWToNumber(cf.y or cf.Y or cf[2], posY),
+                MDWToNumber(cf.z or cf.Z or cf[3], posZ),
+                MDWToNumber(cf.r00 or cf[4], 1),
+                MDWToNumber(cf.r01 or cf[5], 0),
+                MDWToNumber(cf.r02 or cf[6], 0),
+                MDWToNumber(cf.r10 or cf[7], 0),
+                MDWToNumber(cf.r11 or cf[8], 1),
+                MDWToNumber(cf.r12 or cf[9], 0),
+                MDWToNumber(cf.r20 or cf[10], 0),
+                MDWToNumber(cf.r21 or cf[11], 0),
+                MDWToNumber(cf.r22 or cf[12], 1)
             )
         end
     end
@@ -1231,15 +1231,15 @@ local function oniumCreateCFrame(fd, posX, posY, posZ)
     if fd and fd.r00 ~= nil then
         return CFrame.new(
             posX, posY, posZ,
-            oniumToNumber(fd.r00, 1),
-            oniumToNumber(fd.r01, 0),
-            oniumToNumber(fd.r02, 0),
-            oniumToNumber(fd.r10, 0),
-            oniumToNumber(fd.r11, 1),
-            oniumToNumber(fd.r12, 0),
-            oniumToNumber(fd.r20, 0),
-            oniumToNumber(fd.r21, 0),
-            oniumToNumber(fd.r22, 1)
+            MDWToNumber(fd.r00, 1),
+            MDWToNumber(fd.r01, 0),
+            MDWToNumber(fd.r02, 0),
+            MDWToNumber(fd.r10, 0),
+            MDWToNumber(fd.r11, 1),
+            MDWToNumber(fd.r12, 0),
+            MDWToNumber(fd.r20, 0),
+            MDWToNumber(fd.r21, 0),
+            MDWToNumber(fd.r22, 1)
         )
     end
 
@@ -1251,7 +1251,7 @@ local function oniumCreateCFrame(fd, posX, posY, posZ)
     return CFrame.new(posX, posY, posZ)
 end
 
-local function oniumFindFramesData(data)
+local function MDWFindFramesData(data)
     if type(data) ~= "table" then
         return nil
     end
@@ -1298,12 +1298,12 @@ local function oniumFindFramesData(data)
     return nil
 end
 
-local function oniumNormalizeOneFrame(fd, index, prevFrame, firstTime)
+local function MDWNormalizeOneFrame(fd, index, prevFrame, firstTime)
     if not fd or type(fd) ~= "table" then
         return nil, firstTime
     end
 
-    local posVec = oniumVecFromAny(fd.position) or oniumVecFromAny(fd.pos)
+    local posVec = MDWVecFromAny(fd.position) or MDWVecFromAny(fd.pos)
 
     local posX, posY, posZ
     if posVec then
@@ -1336,7 +1336,7 @@ local function oniumNormalizeOneFrame(fd, index, prevFrame, firstTime)
         timestamp = prevFrame.t + SAMPLE_INTERVAL
     end
 
-    local cityVec = oniumVecFromAny(fd.city) or oniumVecFromAny(fd.velocity)
+    local cityVec = MDWVecFromAny(fd.city) or MDWVecFromAny(fd.velocity)
 
     -- Kalau city tidak ada, hitung dari posisi dan selisih waktu.
     if not cityVec and prevFrame and prevFrame.pos then
@@ -1344,20 +1344,20 @@ local function oniumNormalizeOneFrame(fd, index, prevFrame, firstTime)
         cityVec = (Vector3.new(posX, posY, posZ) - prevFrame.pos) / dt
     end
 
-    local state = oniumStateName(fd)
+    local state = MDWStateName(fd)
     -- PATCH SCRIPT 2 PLAYBACK: simpan state/jump asli dari JSON sebelum state dikoreksi oleh city.Y.
     -- Ini penting supaya area tanah tidak rata tidak dibaca sebagai lompat saat playback.
     local rawState = tostring(fd.rawState or fd.originalState or fd.recordState or state)
     rawState = rawState:gsub("Enum%.HumanoidStateType%.", "")
     if rawState == "" or rawState == "nil" or rawState == "Unknown" then rawState = state end
     local rawJump = fd.rawJump == true or fd.originalJump == true or fd.jump == true or fd.jumping == true
-    local isFreefall = oniumIsFreefallState(state)
-    local isJumping = rawJump or oniumIsJumpState(state)
+    local isFreefall = MDWIsFreefallState(state)
+    local isJumping = rawJump or MDWIsJumpState(state)
     local isClimbing = fd.climbing == true or state == "Climbing"
     local isSwimming = fd.swimming == true or state == "Swimming"
     local isSitting = fd.sitting == true or state == "Seated" or state == "Sitting"
 
-    -- Koreksi state ONIUM pakai city.Y bila state kurang akurat.
+    -- Koreksi state MDW pakai city.Y bila state kurang akurat.
     if cityVec then
         if isJumping or math.abs(cityVec.Y) > 4 then
             if cityVec.Y > 4 then
@@ -1372,9 +1372,9 @@ local function oniumNormalizeOneFrame(fd, index, prevFrame, firstTime)
         end
     end
 
-    local cframe = oniumCreateCFrame(fd, posX, posY, posZ)
-    local walkSpeed = oniumPickWalkSpeed(fd, cityVec)
-    local hVelocity = oniumGetHorizontalSpeed(cityVec)
+    local cframe = MDWCreateCFrame(fd, posX, posY, posZ)
+    local walkSpeed = MDWPickWalkSpeed(fd, cityVec)
+    local hVelocity = MDWGetHorizontalSpeed(cityVec)
 
     if hVelocity <= 0 and tonumber(fd.v) then
         hVelocity = tonumber(fd.v) or 0
@@ -1389,7 +1389,7 @@ local function oniumNormalizeOneFrame(fd, index, prevFrame, firstTime)
         walkSpeed = walkSpeed,
         tool = tostring(fd.tool or ""),
         hipHeight = tonumber(fd.hipHeight) or nil,
-        moveDirection = oniumVecFromAny(fd.moveDirection),
+        moveDirection = MDWVecFromAny(fd.moveDirection),
         noShiftLock = fd.noShiftLock == true or fd.rotationMode == "AutoRotate",
         rotationMode = tostring(fd.rotationMode or ""),
         rawState = rawState,
@@ -1403,16 +1403,16 @@ local function oniumNormalizeOneFrame(fd, index, prevFrame, firstTime)
     }, firstTime
 end
 
-local function oniumEstimateBaseSpeed(frames)
+local function MDWEstimateBaseSpeed(frames)
     local samples = {}
 
     for _, fr in ipairs(frames or {}) do
         if type(fr) == "table" then
             local ws = tonumber(fr.walkSpeed) or 0
-            local h = oniumGetHorizontalSpeed(fr.city)
+            local h = MDWGetHorizontalSpeed(fr.city)
 
             local candidate = ws
-            if ONIUM_AUTO_SPEED_FROM_CITY and h > candidate and (ws <= 20 or h <= 120) then
+            if MDW_AUTO_SPEED_FROM_CITY and h > candidate and (ws <= 20 or h <= 120) then
                 candidate = h
             end
 
@@ -1433,7 +1433,7 @@ local function oniumEstimateBaseSpeed(frames)
     return clamp(round(samples[idx], 1), MIN_PLAYBACK_SPEED, MAX_PLAYBACK_SPEED)
 end
 
-local function oniumSafeVelocity(vec, maxH, maxY)
+local function MDWSafeVelocity(vec, maxH, maxY)
     if typeof(vec) ~= "Vector3" then
         return Vector3.new(0, 0, 0)
     end
@@ -3681,7 +3681,7 @@ local function startPlayback()
     end
 
     local frames = recordedFrames
-    local recordedBaseSpeed = oniumEstimateBaseSpeed(frames)
+    local recordedBaseSpeed = MDWEstimateBaseSpeed(frames)
     playbackRuntimeSpeed = clamp(round(safeNumber(currentPlaybackSpeed, recordedBaseSpeed), 1), MIN_PLAYBACK_SPEED, (BITWISE_STABLE_MAX_PLAY_SPEED or 120))
     currentPlaybackSpeed = playbackRuntimeSpeed
 
@@ -5078,10 +5078,10 @@ local function processJSONData(jsonText, source)
         end
     end
 
-    local framesData = oniumFindFramesData(data)
+    local framesData = MDWFindFramesData(data)
 
     if not framesData or #framesData < 2 then
-        showNotification("Load", "❌ Frame ONIUM/BitWise tidak ditemukan.\nMinimal 2 frame.", 3)
+        showNotification("Load", "❌ Frame MDW/BitWise tidak ditemukan.\nMinimal 2 frame.", 3)
         return false
     end
 
@@ -5114,7 +5114,7 @@ local function processJSONData(jsonText, source)
 
         for i = startIdx, endIdx do
             local fr
-            fr, firstTime = oniumNormalizeOneFrame(framesData[i], i, prevFrame, firstTime)
+            fr, firstTime = MDWNormalizeOneFrame(framesData[i], i, prevFrame, firstTime)
 
             if fr then
                 validFrames = validFrames + 1
@@ -5144,7 +5144,7 @@ local function processJSONData(jsonText, source)
     totalPlaybackDuration = recordedFrames[#recordedFrames].t
     currentPlaybackTime = 0
 
-    local autoMapSpeed = oniumEstimateBaseSpeed(recordedFrames)
+    local autoMapSpeed = MDWEstimateBaseSpeed(recordedFrames)
     currentPlaybackSpeed = clamp(round(autoMapSpeed, 1), MIN_PLAYBACK_SPEED, MAX_PLAYBACK_SPEED)
     originalRecordingSpeed = currentPlaybackSpeed
 
@@ -7808,18 +7808,18 @@ end)
         local InfoTab = Window:Tab({ Title = "Info", Icon = "info" })
         pcall(function() InfoTab.UIElements.Main.Visible = false end)
         InfoTab:Section({ Title = "PARADOX HAX REPLAY", Icon = "crown" })
-        InfoTab:Paragraph({ Title = "About", Image = "info", ImageSize = 20, Desc = "© 2024 PARADOX HAX | ONIUM System\nRoblox Auto Race Replay Script\nSupport: Xeno, Delta, Android, iOS\n\nPlayback System: ONIUM V3.6\nUI Library: WindUI by Footagesus\nAPI Server: MainzStore" })
+        InfoTab:Paragraph({ Title = "About", Image = "info", ImageSize = 20, Desc = "© 2024 PARADOX HAX | MDW System\nRoblox Auto Race Replay Script\nSupport: Xeno, Delta, Android, iOS\n\nPlayback System: MDW V3.6\nUI Library: WindUI by Footagesus\nAPI Server: MainzStore" })
         InfoTab:Section({ Title = "Status Akun", Icon = "badge-info" })
         local userStatusText
         if userLevel == "vip" then userStatusText = "VIP USER | " .. tostring(remainingDays or "?") .. " hari tersisa"
         else userStatusText = "FREE USER" end
-        InfoTab:Paragraph({ Title = "Informasi User", Image = "user", ImageSize = 20, Desc = "Version  : PARADOX HAX V3.6 (ONIUM)\nStatus   : "..userStatusText.."\nPlatform : Xeno, Delta, Android, iOS" })
+        InfoTab:Paragraph({ Title = "Informasi User", Image = "user", ImageSize = 20, Desc = "Version  : PARADOX HAX V3.6 (MDW)\nStatus   : "..userStatusText.."\nPlatform : Xeno, Delta, Android, iOS" })
         InfoTab:Section({ Title = "FITUR FREE", Icon = "star" })
 InfoTab:Paragraph({ Title = "Free Access", Image = "star", ImageSize = 20, Desc = "• Playback Recording\n• Stop Playback\n• Loop Mode\n• Speedometer\n• UI Customization (6+ tema)" })
         InfoTab:Section({ Title = "FITUR VIP", Icon = "gem" })
         InfoTab:Paragraph({ Title = "VIP Access", Image = "crown", ImageSize = 20, Desc = "• Path Visualizer 3D\n• Load Gunung Routes (API)\n• Set Speed dari Speedometer\n• Ghost & Invisibility\n• Noclip\n• ESP Chams (Rainbow/Red)\n• ESP Name Tags\n• Unlock Emotes" })
         InfoTab:Section({ Title = "Credits", Icon = "heart" })
-        InfoTab:Paragraph({ Title = "Main Credits", Image = "heart", ImageSize = 20, Desc = "Script By : PARADOX HAX Team\nPlayback System : ONIUM V3.6\nUI Library : WindUI by Footagesus\nAPI Server : MainzStore\nDiscord : discord.gg/fsNpvCCqxq" })
+        InfoTab:Paragraph({ Title = "Main Credits", Image = "heart", ImageSize = 20, Desc = "Script By : PARADOX HAX Team\nPlayback System : MDW V3.6\nUI Library : WindUI by Footagesus\nAPI Server : MainzStore\nDiscord : discord.gg/fsNpvCCqxq" })
     end)
 
     pcall(function()
@@ -8090,8 +8090,8 @@ function createKeyModal()
     LoginKeyInput = LoginTab:Input({
         Title = "Access Key",
         Icon = "key-round",
-        Desc = "Masukkan key ONIUM/PARADOX HAX. Spasi/baris baru akan dibersihkan otomatis.",
-        Placeholder = "ONIUM_... atau FREE-ACCESS-2026",
+        Desc = "Masukkan key MDW. Spasi/baris baru akan dibersihkan otomatis.",
+        Placeholder = "MDW",
         Type = "Input",
         Callback = function(text)
             loginKeyText = trimKeyText(text)
@@ -8202,7 +8202,7 @@ print("  PARADOX HAX REPLAY V3.6 - FIXED")
 print("  ✅ FIX: WalkSpeed restored after stop (tanpa auto equip/ganti coil)")
 print("  ✅ FIX: AutoRotate = true after stop (avatar bisa diarahkan)")
 print("  ✅ FIX: CFrame reset menghadap kamera setelah stop")
-print("  ✅ Playback System: ONIUM V3.6 (Smart Resume + Binary Search)")
+print("  ✅ Playback System: MDW V3.6 (Smart Resume + Binary Search)")
 print("  ✅ UI: WindUI by Footagesus")
 print("  ✅ Support: Xeno, Delta, Android, iOS")
 print("═══════════════════════════════════════════════════════════")
