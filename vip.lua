@@ -35,7 +35,7 @@ end
 --// - Hard remove grass dimatikan agar HP/Delta tidak spike/patah-patah.
 --// PATCHED: MOBILE FLOATING PLAY/STOP MULTI-TOUCH SAFE / ANTI ANALOG DRAG
 -- ========== KEY SYSTEM CONFIGURATION ==========
-local API_BASE_URL  = "https://vipdashboard-gljqgiat.manus.space"
+local API_BASE_URL  = "https://vippanel-f7vhvv93.manus.space"
 -- Panel MDW VIP production endpoint; jangan gunakan URL Replit/kingstrom lama.
 local FREE_KEY      = "FREE-ACCESS-2026"
 local SCRIPT_NAME   = "race"
