@@ -7126,6 +7126,51 @@ function BITWISE_ADMIN_CREATE_MENU()
     argumentApply.Visible = false
     argumentApply.Parent = panel
 
+    local playerBar = Instance.new("TextButton")
+    playerBar.Name = "AutomaticPlayerTarget"
+    playerBar.Position = UDim2.new(0, 6, 0, 65)
+    playerBar.Size = UDim2.new(1, -12, 0, 26)
+    playerBar.BackgroundColor3 = Color3.fromRGB(35, 18, 42)
+    playerBar.BorderSizePixel = 0
+    playerBar.TextColor3 = Color3.fromRGB(255, 225, 255)
+    playerBar.TextSize = 11
+    playerBar.Font = Enum.Font.Code
+    playerBar.TextXAlignment = Enum.TextXAlignment.Left
+    playerBar.Text = "  Player Target: pilih player"
+    playerBar.Visible = false
+    playerBar.Parent = panel
+
+    local targetPlayers = {}
+    local targetIndex = 0
+    local function refreshTargetPlayers()
+        targetPlayers = {}
+        for _, plr in ipairs(Players:GetPlayers()) do
+            table.insert(targetPlayers, plr)
+        end
+        if #targetPlayers == 0 then
+            playerBar.Text = "  Player Target: tidak ada player"
+            targetIndex = 0
+            return
+        end
+        if targetIndex < 1 or targetIndex > #targetPlayers then targetIndex = 1 end
+        local plr = targetPlayers[targetIndex]
+        playerBar.Text = "  Player Target: " .. plr.Name .. "  [" .. plr.DisplayName .. "]"
+    end
+    local function chooseTargetPlayer()
+        if #targetPlayers == 0 then refreshTargetPlayers() end
+        if #targetPlayers == 0 then return end
+        targetIndex = (targetIndex % #targetPlayers) + 1
+        local plr = targetPlayers[targetIndex]
+        argumentBox.Text = plr.Name
+        _G.BITWISE_ADMIN_TARGET_PLAYER = plr.Name
+        playerBar.Text = "  Player Target: " .. plr.Name .. "  [" .. plr.DisplayName .. "]"
+        BITWISE_ADMIN_NOTIFY("Target Player", "Dipilih: " .. plr.Name, 2)
+    end
+    playerBar.MouseButton1Click:Connect(chooseTargetPlayer)
+    local function targetCommand(commandName)
+        return tostring(commandName):find("%[player%]") or tostring(commandName):find("%[username%]") or tostring(commandName):find("%[name%]")
+    end
+
     local selectedCommand = nil
 
     local list = Instance.new("ScrollingFrame")
@@ -7151,8 +7196,25 @@ function BITWISE_ADMIN_CREATE_MENU()
     local function selectCommand(commandName)
         selectedCommand = commandName
         local parameter = tostring(commandName):match("(%[[^%]]+%])")
-        argumentBox.Visible = parameter ~= nil
+        local needsPlayer = targetCommand(commandName) ~= nil
+        playerBar.Visible = needsPlayer
+        argumentBox.Visible = parameter ~= nil and not needsPlayer
         argumentApply.Visible = parameter ~= nil
+        if needsPlayer then
+            argumentBox.Visible = true
+            argumentBox.Position = UDim2.new(0, 6, 0, 96)
+            argumentBox.Size = UDim2.new(1, -76, 0, 26)
+            argumentApply.Position = UDim2.new(1, -68, 0, 96)
+            refreshTargetPlayers()
+            list.Position = UDim2.new(0, 5, 0, 127)
+            list.Size = UDim2.new(1, -10, 1, -132)
+        else
+            argumentBox.Position = UDim2.new(0, 6, 0, 65)
+            argumentBox.Size = UDim2.new(1, -76, 0, 26)
+            argumentApply.Position = UDim2.new(1, -68, 0, 65)
+            list.Position = UDim2.new(0, 5, 0, 96)
+            list.Size = UDim2.new(1, -10, 1, -101)
+        end
         argumentBox.Text = ""
         argumentBox.PlaceholderText = parameter and ("Masukkan " .. parameter .. " lalu Apply") or "Tidak perlu argumen"
     end
@@ -8308,7 +8370,7 @@ function createKeyModal()
     LoginKeyInput = LoginTab:Input({
         Title = "Access Key",
         Icon = "key-round",
-        Desc = "Masukkan key MDW. Spasi/baris baru akan dibersihkan otomatis.",
+        Desc = "Masukkan key MDW/PARADOX HAX. Spasi/baris baru akan dibersihkan otomatis.",
         Placeholder = "MDW_... atau FREE-ACCESS-2026",
         Type = "Input",
         Callback = function(text)
